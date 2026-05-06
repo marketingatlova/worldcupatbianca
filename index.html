@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bianca World Cup</title>
-    <!-- Importing your specific typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
@@ -15,7 +14,7 @@
         <!-- The Verification Gate -->
         <div id="auth-screen" class="screen">
             <h1>ENTER THE CLUB</h1>
-            <p>Link your phone number to access your Footballs and enter the prediction pool.</p>
+            <p>Link your phone number to access your Footballs.</p>
             <input type="tel" id="phone-input" class="mono" placeholder="08X-XXX-XXXX">
             <button onclick="verifyPhone()">VERIFY CREDENTIALS</button>
         </div>
@@ -34,13 +33,18 @@
                 </div>
             </div>
 
-            <div class="matches-container" id="matches-container">
-                <!-- We will inject the match cards here in the next phase -->
+            <!-- NEW: The Add Points Interface -->
+            <div class="claim-card">
+                <h3>CLAIM FOOTBALLS</h3>
+                <p class="muted">100 THB = 1 Football. Hand to staff to verify.</p>
+                <input type="number" id="spend-amount" class="mono" placeholder="Receipt Amount (THB)">
+                <input type="password" id="staff-passcode" class="mono" placeholder="Staff Passcode (6-Digits)">
+                <button onclick="submitClaim()" id="claim-btn">VERIFY & ADD</button>
+                <p id="claim-message" class="muted" style="margin-top: 15px; display: none;"></p>
             </div>
         </div>
     </div>
 
-    <!-- The LINE LIFF SDK -->
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="app.js"></script>
 </body>
