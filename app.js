@@ -52,7 +52,7 @@ async function fetchUserData(lineId, displayName, pictureUrl) {
             document.getElementById('auth-screen').classList.add('active');
         }
     } catch (error) { 
-        document.getElementById('loading-screen').innerHTML = "<h3 style='color:red;'>CONNECTION ERROR</h3><p>Please refresh.</p>";
+        document.getElementById('loading-screen').innerHTML = "<p class='loading-text' style='color:#ff6b6b;'>CONNECTION ERROR</p><p class='muted'>Please refresh.</p>";
     }
 }
 
@@ -109,7 +109,6 @@ async function castVote(teamSide) {
     const selectedTeam = teamSide === 'teamA' ? currentMatchData.teamA : currentMatchData.teamB;
     const matchName = `${currentMatchData.teamA} vs ${currentMatchData.teamB}`;
     
-    // Updated prompt for 100 points
     if (!confirm(`Spend 100 Points to vote for ${selectedTeam}?`)) return;
 
     try {
@@ -157,7 +156,7 @@ async function submitClaim() {
         
         msg.style.display = "block";
         if (result.status === "success") {
-            msg.style.color = "#235E44"; 
+            msg.style.color = "#1db954"; 
             msg.innerText = result.message;
             document.getElementById('user-footballs').innerText = result.newTotal;
             userProfile.availableFootballs = result.newTotal;
@@ -184,17 +183,18 @@ async function fetchLeaderboard() {
         const list = document.getElementById('leaderboard-list');
         list.innerHTML = "";
         
-        const medals = ["🥇", "🥈", "🥉", "4.", "5."];
+        const medals = ["🥇", "🥈", "🥉", "4", "5"];
+        const medalColors = ["#FAB31E", "#b0b8c1", "#cd7f32", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.3)"];
 
         users.forEach((u, index) => {
             list.innerHTML += `
             <div class="lb-row">
                 <div class="lb-left">
-                    <span class="lb-rank" style="color: ${index < 3 ? '#FAB31E' : '#235E44'};">${medals[index]}</span>
+                    <span class="lb-rank" style="color: ${medalColors[index]};">${medals[index]}</span>
                     <img src="${u.pic}" class="lb-avatar" alt="pic">
                     <span class="lb-name">${u.name}</span>
                 </div>
-                <span class="mono" style="font-size: 0.8rem; font-weight: 600;">🔥${u.streak} | ${u.points} PTS</span>
+                <div class="lb-score">🔥${u.streak}&nbsp;&nbsp;${u.points} PTS</div>
             </div>`;
         });
     } catch (e) { console.error(e); }
