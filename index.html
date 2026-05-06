@@ -12,13 +12,13 @@
 <body>
 <div id="app">
 
-  <!-- ── LOADING ── -->
+  <!-- LOADING -->
   <div id="loading-screen" class="screen active">
     <span class="load-ball">⚽</span>
     <p class="load-text">Loading</p>
   </div>
 
-  <!-- ── AUTH / PHONE GATE ── -->
+  <!-- AUTH -->
   <div id="auth-screen" class="screen">
     <div class="app-header">
       <span class="header-wordmark">Predictor</span>
@@ -34,25 +34,32 @@
     </div>
   </div>
 
-  <!-- ── DASHBOARD ── -->
+  <!-- DASHBOARD -->
   <div id="dashboard-screen" class="screen">
 
+    <!-- Top header — always visible -->
     <div class="app-header">
       <span class="header-wordmark">Predictor</span>
       <span class="header-tag">World Cup 2026</span>
     </div>
 
-    <!-- NAV TABS -->
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="switchTab('home')">⚽ Match</button>
-      <button class="nav-tab"        onclick="switchTab('history')">📋 My History</button>
-      <button class="nav-tab"        onclick="switchTab('table')">🏆 Table</button>
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tbtn-match"   onclick="switchTab('match')">
+        <span class="tab-icon">⚽</span><span class="tab-label">Match</span>
+      </button>
+      <button class="tab-btn"        id="tbtn-history" onclick="switchTab('history')">
+        <span class="tab-icon">📋</span><span class="tab-label">History</span>
+      </button>
+      <button class="tab-btn"        id="tbtn-table"   onclick="switchTab('table')">
+        <span class="tab-icon">🏆</span><span class="tab-label">Table</span>
+      </button>
     </div>
 
-    <!-- ════════ HOME TAB ════════ -->
-    <div class="tab-panel active" id="tab-home">
+    <!-- ═══════ MATCH PANEL ═══════ -->
+    <div class="panel active" id="panel-match">
 
-      <!-- Player stats -->
+      <!-- Stat card -->
       <div class="card stat-card" id="stat-card">
         <div class="rank-col">
           <span class="rank-eyebrow">Rank</span>
@@ -63,11 +70,13 @@
             <span class="pts-big" id="user-footballs">0</span>
             <span class="pts-unit">Points</span>
           </div>
-          <div class="streak-chip" id="streak-chip">🔥 <span id="user-streak">0</span>&nbsp;Win Streak</div>
+          <div class="streak-chip" id="streak-chip">
+            🔥 <span id="user-streak">0</span>&nbsp;Win Streak
+          </div>
         </div>
       </div>
 
-      <!-- Match prediction -->
+      <!-- Match card -->
       <div class="card match-card">
         <div class="match-row-top">
           <span class="section-label">⚽ Upcoming Match</span>
@@ -115,15 +124,15 @@
         </div>
       </div>
 
-    </div><!-- /tab-home -->
+    </div><!-- /panel-match -->
 
-    <!-- ════════ HISTORY TAB ════════ -->
-    <div class="tab-panel" id="tab-history">
+    <!-- ═══════ HISTORY PANEL ═══════ -->
+    <div class="panel" id="panel-history">
 
-      <!-- Summary tiles -->
-      <div class="history-summary" id="history-summary">
+      <!-- Summary row -->
+      <div class="history-summary">
         <div class="hs-tile">
-          <div class="hs-num" id="hs-total-votes">—</div>
+          <div class="hs-num" id="hs-total">—</div>
           <div class="hs-label">Predictions</div>
         </div>
         <div class="hs-tile">
@@ -136,52 +145,54 @@
         </div>
       </div>
 
-      <!-- History list -->
+      <!-- Cards -->
       <div class="history-list" id="history-list">
         <div class="history-empty">
           <span class="empty-icon">📋</span>
-          Loading your history…
+          Your predictions will appear here
         </div>
       </div>
 
-    </div><!-- /tab-history -->
+    </div><!-- /panel-history -->
 
-    <!-- ════════ TABLE TAB ════════ -->
-    <div class="tab-panel" id="tab-table">
+    <!-- ═══════ TABLE PANEL ═══════ -->
+    <div class="panel" id="panel-table">
+
       <div class="card lb-card">
         <div class="lb-header">
           <span class="lb-title">Global Top 5</span>
           <span>🏆</span>
         </div>
         <div id="leaderboard-list">
-          <p style="font-size:.78rem;color:rgba(26,77,46,.4);text-align:center;padding:8px 0;">Loading table…</p>
+          <p style="font-size:.78rem;color:rgba(26,77,46,.4);text-align:center;padding:8px 0;">Loading…</p>
         </div>
       </div>
-    </div><!-- /tab-table -->
 
-  </div><!-- /dashboard -->
+    </div><!-- /panel-table -->
+
+  </div><!-- /dashboard-screen -->
 </div><!-- /app -->
 
 
-<!-- ══ WIN CELEBRATION OVERLAY ══ -->
+<!-- WIN CELEBRATION OVERLAY -->
 <div id="win-celebration">
   <div class="confetti-container" id="confetti-container"></div>
   <div class="win-toast">
     <span class="win-toast-emoji" id="win-toast-emoji">🏆</span>
-    <div class="win-toast-title" id="win-toast-title">Winner!</div>
-    <p class="win-toast-sub" id="win-toast-sub">Your prediction was correct</p>
+    <div class="win-toast-title" id="win-toast-title">Correct Pick!</div>
+    <p class="win-toast-sub"   id="win-toast-sub">Your prediction was right</p>
     <div class="win-toast-pts" id="win-toast-pts">+200</div>
     <div class="win-toast-pts-label">Points earned</div>
     <button class="win-toast-close" onclick="closeCelebration()">Keep Playing</button>
   </div>
 </div>
 
-<!-- ══ VOTE BOTTOM SHEET ══ -->
+<!-- VOTE BOTTOM SHEET -->
 <div id="vote-overlay" onclick="closeVoteSheet()"></div>
 <div id="vote-sheet">
   <div class="sheet-handle"></div>
   <div class="sheet-team-hero">
-    <span class="sheet-flag-big" id="sheet-flag">🏳️</span>
+    <span class="sheet-flag-big"  id="sheet-flag">🏳️</span>
     <span class="sheet-team-name" id="sheet-team-name">Team</span>
   </div>
   <p class="sheet-eyebrow">Predict this team wins</p>
