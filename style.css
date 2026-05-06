@@ -3,7 +3,7 @@
     --brand-green: #235E44;
     --brand-gold: #FAB31E;
     --text-cream: #FFF1DA;
-    --card-bg: rgba(35, 94, 68, 0.15); /* Subtle Bianca Green tint */
+    --card-bg: rgba(35, 94, 68, 0.15); 
 }
 
 html, body {
@@ -21,7 +21,7 @@ html, body {
 #app {
     width: 100%;
     max-width: 480px;
-    padding: 15px; /* Reduced padding */
+    padding: 15px; 
     box-sizing: border-box;
 }
 
@@ -38,14 +38,13 @@ html, body {
 
 .mono { font-family: 'Cascadia Mono', monospace; }
 
-/* Reduced typography sizing across the board */
 h1 { font-size: 1.2rem; font-weight: 600; letter-spacing: 2px; color: var(--brand-gold); margin-bottom: 5px; }
 h3 { font-size: 1rem; font-weight: 600; letter-spacing: 1px; color: var(--brand-gold); margin-bottom: 5px; }
 
 p, .muted { 
-    color: rgba(255, 241, 218, 0.7); /* Muted Cream */
+    color: rgba(255, 241, 218, 0.7); 
     font-weight: 300; 
-    font-size: 0.75rem; /* Smaller, cleaner text */
+    font-size: 0.75rem; 
     margin-top: 0;
 }
 
@@ -53,7 +52,7 @@ input {
     background: var(--bg-color); 
     border: 1px solid var(--brand-green); 
     color: var(--text-cream);
-    padding: 12px; /* Smaller inputs */
+    padding: 12px; 
     width: 100%; 
     box-sizing: border-box;
     margin: 8px 0; 
@@ -86,7 +85,7 @@ button:active { background: var(--brand-gold); color: var(--bg-color); }
 .status-badge, .claim-card, .dashboard-module {
     border: 1px solid var(--brand-green); 
     border-radius: 10px; 
-    padding: 15px; /* Tighter padding inside cards */
+    padding: 15px; 
     width: 100%; 
     box-sizing: border-box; 
     margin-bottom: 15px;
