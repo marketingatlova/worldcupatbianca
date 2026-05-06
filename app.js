@@ -4,7 +4,6 @@ const LIFF_ID = "2009984765-j723B1C4";
 let userProfile = null;
 let currentMatchData = null;
 
-// Lightweight flag engine for the UI
 const getFlagEmoji = (countryName) => {
     const flags = {
         "Mexico": "🇲🇽", "South Africa": "🇿🇦", "Canada": "🇨🇦", "Switzerland": "🇨🇭",
@@ -24,22 +23,21 @@ async function initializeLiff() {
         await liff.init({ liffId: LIFF_ID });
         if (liff.isLoggedIn()) {
             const profile = await liff.getProfile();
-            fetchUserData(profile.userId, profile.displayName);
+            fetchUserData(profile.userId, profile.displayName, profile.pictureUrl);
         } else {
             liff.login();
         }
     } catch (err) {
-        console.error("LIFF failed", err);
         document.getElementById('loading-screen').classList.remove('active');
         document.getElementById('auth-screen').classList.add('active');
     }
 }
 
-async function fetchUserData(lineId, displayName) {
+async function fetchUserData(lineId, displayName, pictureUrl) {
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'getUser', lineId: lineId, displayName: displayName })
+            body: JSON.stringify({ action: 'getUser', lineId: lineId, displayName: displayName, pictureUrl: pictureUrl })
         });
         const data = await response.json();
         userProfile = { lineId, ...data };
@@ -105,7 +103,6 @@ async function fetchNextMatch() {
     } catch (e) { console.error(e); }
 }
 
-// THE VOTING ENGINE
 async function castVote(teamSide) {
     if (!currentMatchData || currentMatchData.status !== "success") return;
     
@@ -118,10 +115,7 @@ async function castVote(teamSide) {
         const res = await fetch(API_URL, {
             method: 'POST',
             body: JSON.stringify({ 
-                action: 'submitVote', 
-                lineId: userProfile.lineId, 
-                matchName: matchName, 
-                team: selectedTeam 
+                action: 'submitVote', lineId: userProfile.lineId, matchName: matchName, team: selectedTeam 
             })
         });
         const result = await res.json();
@@ -133,18 +127,22 @@ async function castVote(teamSide) {
         } else {
             alert(`❌ ${result.message}`);
         }
-    } catch (e) {
-        alert("Network error processing vote.");
-    }
+    } catch (e) { alert("Network error processing vote."); }
+}
+
+function toggleClaimForm() {
+    const form = document.getElementById('claim-form');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
 async function submitClaim() {
     const amount = document.getElementById('spend-amount').value;
+    const billNumber = document.getElementById('bill-number').value;
     const passcode = document.getElementById('staff-passcode').value;
     const msg = document.getElementById('claim-message');
     const btn = document.getElementById('claim-btn');
 
-    if (!amount || !passcode) return alert("Enter amount and passcode.");
+    if (!amount || !billNumber || !passcode) return alert("All fields are required.");
 
     btn.innerText = "VERIFYING...";
     msg.style.display = "none";
@@ -152,24 +150,27 @@ async function submitClaim() {
     try {
         const res = await fetch(API_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'addPoints', lineId: userProfile.lineId, amount: amount, passcode: passcode })
+            body: JSON.stringify({ action: 'addPoints', lineId: userProfile.lineId, amount: amount, passcode: passcode, billNumber: billNumber })
         });
         const result = await res.json();
         
         msg.style.display = "block";
         if (result.status === "success") {
-            msg.style.color = "#235E44"; // Bianca Green
+            msg.style.color = "#235E44"; 
             msg.innerText = result.message;
             document.getElementById('user-footballs').innerText = result.newTotal;
             userProfile.availableFootballs = result.newTotal;
+            
             document.getElementById('spend-amount').value = "";
+            document.getElementById('bill-number').value = "";
             document.getElementById('staff-passcode').value = "";
+            setTimeout(() => toggleClaimForm(), 2000); // Auto-hide form after success
         } else {
             msg.style.color = "#ff6b6b";
             msg.innerText = result.message;
         }
     } catch (e) { msg.style.display = "block"; msg.innerText = "Error."; }
-    btn.innerText = "AUTHORIZE";
+    btn.innerText = "AUTHORIZE POINTS";
 }
 
 async function fetchLeaderboard() {
@@ -182,10 +183,17 @@ async function fetchLeaderboard() {
         const list = document.getElementById('leaderboard-list');
         list.innerHTML = "";
         
+        const medals = ["🥇", "🥈", "🥉", "4.", "5."];
+
         users.forEach((u, index) => {
-            list.innerHTML += `<div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(35,94,68,0.2); padding: 8px 0; font-size: 0.85rem;">
-                <span style="color: var(--brand-green); font-weight: 600;"><span style="color: var(--brand-gold); margin-right: 5px;">${index + 1}.</span> ${u.name}</span>
-                <span class="mono">🔥${u.streak} | ${u.points} PTS</span>
+            list.innerHTML += `
+            <div class="lb-row">
+                <div class="lb-left">
+                    <span class="lb-rank" style="color: ${index < 3 ? '#FAB31E' : '#235E44'};">${medals[index]}</span>
+                    <img src="${u.pic}" class="lb-avatar" alt="pic">
+                    <span class="lb-name">${u.name}</span>
+                </div>
+                <span class="mono" style="font-size: 0.8rem; font-weight: 600;">🔥${u.streak} | ${u.points} PTS</span>
             </div>`;
         });
     } catch (e) { console.error(e); }
@@ -199,17 +207,15 @@ function startCountdown(targetDate) {
     countdownInterval = setInterval(function() {
         const now = new Date().getTime();
         const distance = countDownDate - now;
-        
         if (distance < 0) {
             clearInterval(countdownInterval);
-            document.getElementById("countdown-timer").innerHTML = "KICKOFF!";
+            document.getElementById("countdown-timer").innerHTML = "MATCH IN PROGRESS";
             return;
         }
         const d = Math.floor(distance / (1000 * 60 * 60 * 24));
         const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((distance % (1000 * 60)) / 1000);
-        
         document.getElementById("countdown-timer").innerHTML = `${d}d ${h}h ${m}m ${s}s`;
     }, 1000);
 }
