@@ -6,42 +6,71 @@
     <title>Bianca World Cup</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="app">
-        
-        <div id="loading-screen" class="screen active" style="justify-content: center; height: 80vh;">
-            <h3 style="color: var(--brand-green);">LOADING BIANCA...</h3>
+
+        <!-- LOADING -->
+        <div id="loading-screen" class="screen active" style="justify-content: center;">
+            <span style="font-size: 2.5rem;">⚽</span>
+            <p class="loading-text">Loading Bianca...</p>
         </div>
 
+        <!-- AUTH -->
         <div id="auth-screen" class="screen">
-            <div class="dashboard-module" style="margin-top: 20px;">
-                <h1>JOIN THE GAME</h1>
-                <p style="margin-bottom: 15px;">Enter your phone number to start predicting.</p>
-                <input type="tel" id="phone-input" class="mono" inputmode="numeric" pattern="[0-9]*" placeholder="08X-XXX-XXXX">
-                <button onclick="verifyPhone()">START PLAYING</button>
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="top-bar-logo">BIANCA <span>FC</span></div>
+                <div class="top-bar-badge">World Cup 2026</div>
+            </div>
+
+            <div class="dashboard-module" style="margin-top: 10px; text-align: left;">
+                <h3 style="margin-bottom: 12px;">Player Registration</h3>
+                <h1 style="margin-bottom: 12px;">JOIN THE GAME</h1>
+                <p style="margin-bottom: 18px;">Enter your phone number to start predicting matches and climbing the table.</p>
+                <input type="tel" id="phone-input" inputmode="numeric" pattern="[0-9]*" placeholder="08X-XXX-XXXX">
+                <button onclick="verifyPhone()">⚽ Start Playing</button>
             </div>
         </div>
 
+        <!-- DASHBOARD -->
         <div id="dashboard-screen" class="screen">
-            
-            <!-- Personal Status -->
-            <div class="status-badge">
-                <div class="shield"><span id="user-rank">...</span></div>
-                <div class="points-display"><span id="user-footballs" class="mono">0</span> <span style="font-size: 1rem;">PTS</span></div>
-                <div class="streak-display">🔥 <span id="user-streak" class="mono">0</span> WIN STREAK</div>
+
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="top-bar-logo">BIANCA <span>FC</span></div>
+                <div class="top-bar-badge">World Cup 2026</div>
             </div>
 
-            <!-- Prediction Module -->
+            <!-- Player Card -->
+            <div class="status-badge">
+                <div class="player-card-inner">
+                    <div class="player-card-rank">
+                        <div class="rank-label">Rank</div>
+                        <div class="rank-value" id="user-rank">—</div>
+                    </div>
+                    <div class="player-card-stats">
+                        <div class="stat-row">
+                            <span class="stat-number mono" id="user-footballs">0</span>
+                            <span class="stat-label">Points</span>
+                        </div>
+                        <div class="streak-pill">
+                            🔥 <span class="mono" id="user-streak">0</span>&nbsp;WIN STREAK
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Match Prediction -->
             <div class="dashboard-module">
                 <div class="match-header">
-                    <span>UPCOMING MATCH</span>
-                    <span id="next-match-time" style="color: var(--brand-gold);">Loading...</span>
+                    <span class="match-header-label">⚽ Upcoming Match</span>
+                    <span class="match-header-time" id="next-match-time">Loading...</span>
                 </div>
-                
-                <p class="muted" style="margin-bottom: 15px; font-weight: 600;">Who will win? Tap a flag to vote (Cost: 100 PTS)</p>
+
+                <p class="vote-label">Who takes the W? · 100 PTS to vote</p>
 
                 <div class="match-teams">
                     <div class="team-btn" onclick="castVote('teamA')">
@@ -54,35 +83,40 @@
                         <span class="team-name" id="name-b">Team B</span>
                     </div>
                 </div>
-                <p class="mono" id="countdown-timer" style="font-size: 1.1rem; color: var(--brand-green); margin-top: 20px; margin-bottom: 0;">--:--:--:--</p>
+
+                <p class="mono" id="countdown-timer">--:--:--:--</p>
             </div>
 
-            <!-- Global Leaderboard -->
+            <!-- Leaderboard -->
             <div class="dashboard-module">
-                <h3 style="text-align: center; margin-bottom: 15px;">🏆 GLOBAL TOP 5</h3>
-                <div id="leaderboard-list" style="text-align: left; width: 100%;">
-                    <p class="muted" style="text-align: center;">Loading scores...</p>
+                <div class="lb-header">
+                    <span class="lb-title">Global Top 5</span>
+                    <span class="lb-trophy">🏆</span>
+                </div>
+                <div id="leaderboard-list">
+                    <p class="muted" style="text-align: center;">Loading table...</p>
                 </div>
             </div>
 
-            <!-- Expandable Claim Module (Expert UI) -->
-            <div class="dashboard-module" style="padding: 15px 20px;">
+            <!-- Add Points -->
+            <div class="dashboard-module" style="padding: 16px 20px;">
                 <div class="claim-header" onclick="toggleClaimForm()">
-                    <h3 style="text-align: center;">+ ADD POINTS FROM RECEIPT</h3>
+                    <h3 style="color: var(--brand-gold); margin: 0; letter-spacing: 2px;">+ Add Points from Receipt</h3>
                 </div>
-                
-                <div id="claim-form" style="display: none; width: 100%; margin-top: 15px; border-top: 1px solid rgba(35,94,68,0.08); padding-top: 15px;">
-                    <p class="muted" style="text-align: center; margin-bottom: 12px;">100 THB = 1 Point. Hand to staff to verify.</p>
-                    <input type="number" id="spend-amount" class="mono" inputmode="numeric" pattern="[0-9]*" placeholder="Receipt Amount (THB)">
-                    <input type="number" id="bill-number" class="mono" inputmode="numeric" pattern="[0-9]*" placeholder="Bill / Receipt Number">
-                    <input type="password" id="staff-passcode" class="mono" inputmode="numeric" pattern="[0-9]*" placeholder="Staff Passcode">
-                    <button onclick="submitClaim()" id="claim-btn">AUTHORIZE</button>
+
+                <div id="claim-form" style="display: none; width: 100%; margin-top: 14px; border-top: 1px solid var(--card-border); padding-top: 14px;">
+                    <p class="claim-note muted">100 THB = 1 Point · Hand to staff to verify</p>
+                    <input type="number" id="spend-amount" inputmode="numeric" pattern="[0-9]*" placeholder="Receipt Amount (THB)">
+                    <input type="number" id="bill-number" inputmode="numeric" pattern="[0-9]*" placeholder="Bill / Receipt Number">
+                    <input type="password" id="staff-passcode" inputmode="numeric" pattern="[0-9]*" placeholder="Staff Passcode">
+                    <button onclick="submitClaim()" id="claim-btn">Authorize Points</button>
                     <p id="claim-message" class="muted" style="margin-top: 10px; display: none; text-align: center;"></p>
                 </div>
             </div>
 
         </div>
     </div>
+
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="app.js"></script>
 </body>
