@@ -31,14 +31,13 @@
                 <div class="streak-display">🔥 <span id="user-streak" class="mono">0</span> WIN STREAK</div>
             </div>
 
-            <!-- Enhanced Prediction Card -->
-            <div class="dashboard-module" style="padding: 15px;">
+            <div class="dashboard-module">
                 <div class="match-header">
                     <span>UPCOMING MATCH</span>
                     <span id="next-match-time" style="color: var(--brand-gold);">Loading...</span>
                 </div>
                 
-                <p class="muted" style="margin-bottom: 15px; font-weight: 600;">Who will win? Tap a flag to vote (Cost: 1 PT)</p>
+                <p class="muted" style="margin-bottom: 18px; font-weight: 600;">Who will win? Tap a flag to vote (Cost: 100 PTS)</p>
 
                 <div class="match-teams">
                     <div class="team-btn" onclick="castVote('teamA')">
@@ -51,10 +50,9 @@
                         <span class="team-name" id="name-b">Team B</span>
                     </div>
                 </div>
-                <p class="mono" id="countdown-timer" style="font-size: 1.1rem; color: var(--brand-green); margin-top: 15px; margin-bottom: 0;">--:--:--:--</p>
+                <p class="mono" id="countdown-timer" style="font-size: 1.1rem; color: var(--brand-green); margin-top: 20px; margin-bottom: 0;">--:--:--:--</p>
             </div>
 
-            <!-- Competitive Leaderboard -->
             <div class="dashboard-module">
                 <h3>🏆 GLOBAL TOP 5</h3>
                 <div id="leaderboard-list" style="text-align: left; width: 100%; margin-top: 15px;">
@@ -62,7 +60,6 @@
                 </div>
             </div>
 
-            <!-- Hidden Claim Section -->
             <div class="claim-toggle" onclick="toggleClaimForm()">
                 <span>+ ADD POINTS FROM RECEIPT</span>
             </div>
