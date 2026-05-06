@@ -8,7 +8,7 @@ const getFlagEmoji = (countryName) => {
     const flags = {
         "Mexico": "🇲🇽", "South Africa": "🇿🇦", "Canada": "🇨🇦", "Switzerland": "🇨🇭",
         "USA": "🇺🇸", "Australia": "🇦🇺", "Brazil": "🇧🇷", "Morocco": "🇲🇦",
-        "Germany": "🇩🇪", "France": "🇫🇷", "England": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Spain": "🇪🇸",
+        "Germany": "🇩🇪", "France": "🇫🇷", "England": "🇬🇧", "Spain": "🇪🇸",
         "Argentina": "🇦🇷", "Portugal": "🇵🇹", "Italy": "🇮🇹", "Netherlands": "🇳🇱"
     };
     return flags[countryName] || "🏳️";
@@ -164,7 +164,7 @@ async function submitClaim() {
             document.getElementById('spend-amount').value = "";
             document.getElementById('bill-number').value = "";
             document.getElementById('staff-passcode').value = "";
-            setTimeout(() => toggleClaimForm(), 2000); // Auto-hide form after success
+            setTimeout(() => toggleClaimForm(), 2000); 
         } else {
             msg.style.color = "#ff6b6b";
             msg.innerText = result.message;
