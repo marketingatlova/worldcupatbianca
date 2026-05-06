@@ -10,7 +10,6 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div id="app">
 
   <!-- ── LOADING ── -->
@@ -19,7 +18,7 @@
     <p class="load-text">Loading</p>
   </div>
 
-  <!-- ── PHONE GATE (new users OR existing users without phone) ── -->
+  <!-- ── AUTH / PHONE GATE ── -->
   <div id="auth-screen" class="screen">
     <div class="app-header">
       <span class="header-wordmark">Predictor</span>
@@ -28,7 +27,7 @@
     <div class="card auth-card">
       <p class="auth-eyebrow">Player Registration</p>
       <h1 class="auth-headline">Join the Game</h1>
-      <p class="auth-sub">Enter your phone number to link your account and start predicting match results.</p>
+      <p class="auth-sub">Enter your phone number to link your account and start predicting.</p>
       <input type="tel" id="phone-input" inputmode="numeric" pattern="[0-9]*" placeholder="08X-XXX-XXXX">
       <button id="auth-btn" onclick="submitPhone()">Continue</button>
       <p class="auth-error" id="auth-error"></p>
@@ -43,96 +42,142 @@
       <span class="header-tag">World Cup 2026</span>
     </div>
 
-    <!-- Player stats -->
-    <div class="card stat-card">
-      <div class="rank-col">
-        <span class="rank-eyebrow">Rank</span>
-        <span class="rank-value" id="user-rank">—</span>
-      </div>
-      <div class="data-col">
-        <div class="pts-row">
-          <span class="pts-big" id="user-footballs">0</span>
-          <span class="pts-unit">Points</span>
-        </div>
-        <div class="streak-chip">🔥 <span id="user-streak">0</span>&nbsp;Win Streak</div>
-      </div>
+    <!-- NAV TABS -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('home')">⚽ Match</button>
+      <button class="nav-tab"        onclick="switchTab('history')">📋 My History</button>
+      <button class="nav-tab"        onclick="switchTab('table')">🏆 Table</button>
     </div>
 
-    <!-- Match prediction -->
-    <div class="card match-card">
-      <div class="match-row-top">
-        <span class="section-label">⚽ Upcoming Match</span>
-        <span class="time-badge" id="next-match-time">Loading…</span>
-      </div>
+    <!-- ════════ HOME TAB ════════ -->
+    <div class="tab-panel active" id="tab-home">
 
-      <p class="vote-hint" id="vote-hint-text">Tap a team flag to place your prediction</p>
-
-      <div class="teams-grid">
-        <!-- Team A -->
-        <div class="team-btn" id="btn-teamA" onclick="handleTeamTap('teamA')">
-          <span class="voted-badge">✓</span>
-          <div class="team-flag" id="flag-a">🏳️</div>
-          <span class="team-name" id="name-a">Team A</span>
-          <span class="your-pick-label">Your Pick</span>
+      <!-- Player stats -->
+      <div class="card stat-card" id="stat-card">
+        <div class="rank-col">
+          <span class="rank-eyebrow">Rank</span>
+          <span class="rank-value" id="user-rank">—</span>
         </div>
-
-        <div class="vs-sep">VS</div>
-
-        <!-- Team B -->
-        <div class="team-btn" id="btn-teamB" onclick="handleTeamTap('teamB')">
-          <span class="voted-badge">✓</span>
-          <div class="team-flag" id="flag-b">🏳️</div>
-          <span class="team-name" id="name-b">Team B</span>
-          <span class="your-pick-label">Your Pick</span>
+        <div class="data-col">
+          <div class="pts-row">
+            <span class="pts-big" id="user-footballs">0</span>
+            <span class="pts-unit">Points</span>
+          </div>
+          <div class="streak-chip" id="streak-chip">🔥 <span id="user-streak">0</span>&nbsp;Win Streak</div>
         </div>
       </div>
 
-      <!-- Already voted status pill -->
-      <div class="voted-status-row" id="voted-status-row">
-        <span>✓</span>
-        <span id="voted-status-text">Vote locked in</span>
+      <!-- Match prediction -->
+      <div class="card match-card">
+        <div class="match-row-top">
+          <span class="section-label">⚽ Upcoming Match</span>
+          <span class="time-badge" id="next-match-time">Loading…</span>
+        </div>
+        <p class="vote-hint" id="vote-hint-text">Tap a team flag to place your prediction</p>
+        <div class="teams-grid">
+          <div class="team-btn" id="btn-teamA" onclick="handleTeamTap('teamA')">
+            <span class="voted-badge">✓</span>
+            <div class="team-flag" id="flag-a">🏳️</div>
+            <span class="team-name" id="name-a">Team A</span>
+            <span class="your-pick-label">Your Pick</span>
+          </div>
+          <div class="vs-sep">VS</div>
+          <div class="team-btn" id="btn-teamB" onclick="handleTeamTap('teamB')">
+            <span class="voted-badge">✓</span>
+            <div class="team-flag" id="flag-b">🏳️</div>
+            <span class="team-name" id="name-b">Team B</span>
+            <span class="your-pick-label">Your Pick</span>
+          </div>
+        </div>
+        <div class="voted-status-row" id="voted-status-row">
+          <span>✓</span>
+          <span id="voted-status-text">Vote locked in</span>
+        </div>
+        <div class="countdown-row">
+          <div id="countdown-timer">-- : -- : --</div>
+          <div class="countdown-sub">Kickoff Countdown</div>
+        </div>
       </div>
 
-      <div class="countdown-row">
-        <div id="countdown-timer">-- : -- : --</div>
-        <div class="countdown-sub">Kickoff Countdown</div>
+      <!-- Add points -->
+      <div class="card claim-card">
+        <div class="claim-toggle" onclick="toggleClaimForm()">
+          <span class="claim-plus">＋</span>
+          <span class="claim-toggle-label">Add Points from Receipt</span>
+        </div>
+        <div id="claim-form">
+          <p class="claim-note">100 THB = 1 Point · Staff verifies</p>
+          <input type="number"   id="spend-amount"   inputmode="numeric" pattern="[0-9]*" placeholder="Receipt Amount (THB)">
+          <input type="number"   id="bill-number"    inputmode="numeric" pattern="[0-9]*" placeholder="Bill / Receipt Number">
+          <input type="password" id="staff-passcode" inputmode="numeric" pattern="[0-9]*" placeholder="Staff Passcode">
+          <button onclick="submitClaim()" id="claim-btn">Authorize Points</button>
+          <p id="claim-message"></p>
+        </div>
       </div>
-    </div>
 
-    <!-- Leaderboard -->
-    <div class="card lb-card">
-      <div class="lb-header">
-        <span class="lb-title">Global Top 5</span>
-        <span>🏆</span>
-      </div>
-      <div id="leaderboard-list">
-        <p style="font-size:.78rem;color:rgba(26,77,46,.4);text-align:center;padding:8px 0;">Loading table…</p>
-      </div>
-    </div>
+    </div><!-- /tab-home -->
 
-    <!-- Add points -->
-    <div class="card claim-card">
-      <div class="claim-toggle" onclick="toggleClaimForm()">
-        <span class="claim-plus">＋</span>
-        <span class="claim-toggle-label">Add Points from Receipt</span>
+    <!-- ════════ HISTORY TAB ════════ -->
+    <div class="tab-panel" id="tab-history">
+
+      <!-- Summary tiles -->
+      <div class="history-summary" id="history-summary">
+        <div class="hs-tile">
+          <div class="hs-num" id="hs-total-votes">—</div>
+          <div class="hs-label">Predictions</div>
+        </div>
+        <div class="hs-tile">
+          <div class="hs-num" id="hs-wins">—</div>
+          <div class="hs-label">Correct</div>
+        </div>
+        <div class="hs-tile">
+          <div class="hs-num" id="hs-net">—</div>
+          <div class="hs-label">Net Pts</div>
+        </div>
       </div>
-      <div id="claim-form">
-        <p class="claim-note">100 THB = 1 Point · Staff verifies</p>
-        <input type="number"   id="spend-amount"   inputmode="numeric" pattern="[0-9]*" placeholder="Receipt Amount (THB)">
-        <input type="number"   id="bill-number"    inputmode="numeric" pattern="[0-9]*" placeholder="Bill / Receipt Number">
-        <input type="password" id="staff-passcode" inputmode="numeric" pattern="[0-9]*" placeholder="Staff Passcode">
-        <button onclick="submitClaim()" id="claim-btn">Authorize Points</button>
-        <p id="claim-message"></p>
+
+      <!-- History list -->
+      <div class="history-list" id="history-list">
+        <div class="history-empty">
+          <span class="empty-icon">📋</span>
+          Loading your history…
+        </div>
       </div>
-    </div>
+
+    </div><!-- /tab-history -->
+
+    <!-- ════════ TABLE TAB ════════ -->
+    <div class="tab-panel" id="tab-table">
+      <div class="card lb-card">
+        <div class="lb-header">
+          <span class="lb-title">Global Top 5</span>
+          <span>🏆</span>
+        </div>
+        <div id="leaderboard-list">
+          <p style="font-size:.78rem;color:rgba(26,77,46,.4);text-align:center;padding:8px 0;">Loading table…</p>
+        </div>
+      </div>
+    </div><!-- /tab-table -->
 
   </div><!-- /dashboard -->
 </div><!-- /app -->
 
 
-<!-- ══ VOTE BOTTOM SHEET (outside #app) ══ -->
-<div id="vote-overlay" onclick="closeVoteSheet()"></div>
+<!-- ══ WIN CELEBRATION OVERLAY ══ -->
+<div id="win-celebration">
+  <div class="confetti-container" id="confetti-container"></div>
+  <div class="win-toast">
+    <span class="win-toast-emoji" id="win-toast-emoji">🏆</span>
+    <div class="win-toast-title" id="win-toast-title">Winner!</div>
+    <p class="win-toast-sub" id="win-toast-sub">Your prediction was correct</p>
+    <div class="win-toast-pts" id="win-toast-pts">+200</div>
+    <div class="win-toast-pts-label">Points earned</div>
+    <button class="win-toast-close" onclick="closeCelebration()">Keep Playing</button>
+  </div>
+</div>
 
+<!-- ══ VOTE BOTTOM SHEET ══ -->
+<div id="vote-overlay" onclick="closeVoteSheet()"></div>
 <div id="vote-sheet">
   <div class="sheet-handle"></div>
   <div class="sheet-team-hero">
@@ -161,7 +206,6 @@
   <button id="vote-confirm-btn" onclick="confirmVote()">Confirm Prediction</button>
   <span class="sheet-cancel" onclick="closeVoteSheet()">Cancel</span>
 </div>
-
 
 <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="app.js"></script>
