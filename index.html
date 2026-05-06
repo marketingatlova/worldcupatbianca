@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prestige Prediction</title>
+    <!-- Importing your specific typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- The Verification Gate -->
+        <div id="auth-screen" class="screen">
+            <h1>ENTER THE CLUB</h1>
+            <p>Link your phone number to access your Footballs and enter the prediction pool.</p>
+            <input type="tel" id="phone-input" class="mono" placeholder="08X-XXX-XXXX">
+            <button onclick="verifyPhone()">VERIFY CREDENTIALS</button>
+        </div>
+
+        <!-- The Prestige Dashboard -->
+        <div id="dashboard-screen" class="screen">
+            <div class="status-badge">
+                <div class="shield">
+                    <span id="user-rank">AUTHENTICATING...</span>
+                </div>
+                <div class="points-display">
+                    <span id="user-footballs" class="mono">0</span> <span class="muted">FOOTBALLS</span>
+                </div>
+                <div class="streak-display">
+                    🔥 <span id="user-streak" class="mono">0</span> MATCH STREAK
+                </div>
+            </div>
+
+            <div class="matches-container" id="matches-container">
+                <!-- We will inject the match cards here in the next phase -->
+            </div>
+        </div>
+    </div>
+
+    <!-- The LINE LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
