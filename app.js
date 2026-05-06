@@ -1,5 +1,5 @@
-const API_URL   = "https://script.google.com/macros/s/AKfycbxszwMiMyv94ERtlM7vp8i0FJ4Jg81BWXj6_dQm8u3yA_Y8su2CIngGqPIHV9EW2Bhe/exec";
-const LIFF_ID   = "2009984765-j723B1C4";
+const API_URL = "https://script.google.com/macros/s/AKfycbxszwMiMyv94ERtlM7vp8i0FJ4Jg81BWXj6_dQm8u3yA_Y8su2CIngGqPIHV9EW2Bhe/exec";
+const LIFF_ID = "2009984765-j723B1C4";
 
 let userProfile      = null;
 let currentMatchData = null;
@@ -7,22 +7,28 @@ let currentMatchData = null;
 /* ── Vote sheet state ── */
 let voteTeamSide = null;
 let votePoints   = 100;
-const STEP       = 100;
 const MIN_PTS    = 100;
 
 /* ── Helpers ── */
-const fmt = (n) => Number(n).toLocaleString('en-US');
+const fmt     = (n) => Number(n).toLocaleString('en-US');
+const post    = (body) => fetch(API_URL, { method:'POST', body: JSON.stringify(body) }).then(r => r.json());
+const showEl  = (id, on) => { const el = document.getElementById(id); if(on) el.classList.add('active'); else el.classList.remove('active'); };
 
 const FLAG = {
   "Mexico":"🇲🇽","South Africa":"🇿🇦","Canada":"🇨🇦","Switzerland":"🇨🇭",
   "USA":"🇺🇸","Australia":"🇦🇺","Brazil":"🇧🇷","Morocco":"🇲🇦",
   "Germany":"🇩🇪","France":"🇫🇷","England":"🇬🇧","Spain":"🇪🇸",
-  "Argentina":"🇦🇷","Portugal":"🇵🇹","Italy":"🇮🇹","Netherlands":"🇳🇱"
+  "Argentina":"🇦🇷","Portugal":"🇵🇹","Italy":"🇮🇹","Netherlands":"🇳🇱",
+  "Japan":"🇯🇵","Croatia":"🇭🇷","Belgium":"🇧🇪","Denmark":"🇩🇰",
+  "Colombia":"🇨🇴","Uruguay":"🇺🇾","Ghana":"🇬🇭","Chile":"🇨🇱",
+  "Nigeria":"🇳🇬","Ecuador":"🇪🇨","Saudi Arabia":"🇸🇦","South Korea":"🇰🇷",
+  "Senegal":"🇸🇳","Morocco":"🇲🇦","Curaçao":"🏳️"
 };
 const getFlag = (name) => FLAG[name] || "🏳️";
 
+
 /* ══════════════════════════════════════════
-   LIFF & AUTH
+   LIFF INIT
 ══════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", initializeLiff);
 
@@ -36,23 +42,29 @@ async function initializeLiff() {
       liff.login();
     }
   } catch {
-    show('loading-screen', false);
-    show('auth-screen', true);
+    showEl('loading-screen', false);
+    showEl('auth-screen', true);
   }
 }
 
+
+/* ══════════════════════════════════════════
+   USER DATA + PHONE GATE
+══════════════════════════════════════════ */
 async function fetchUserData(lineId, displayName, pictureUrl) {
   try {
-    const res  = await fetch(API_URL, { method:'POST', body: JSON.stringify({ action:'getUser', lineId, displayName, pictureUrl }) });
-    const data = await res.json();
+    const data = await post({ action:'getUser', lineId, displayName, pictureUrl });
     userProfile = { lineId, ...data };
-    show('loading-screen', false);
+    showEl('loading-screen', false);
+
     if (data.isRegistered) {
+      // Has phone — go straight to dashboard
       showDashboard();
       fetchLeaderboard();
       fetchNextMatch();
     } else {
-      show('auth-screen', true);
+      // No phone on file — show registration gate
+      showEl('auth-screen', true);
     }
   } catch {
     document.getElementById('loading-screen').innerHTML =
@@ -60,26 +72,51 @@ async function fetchUserData(lineId, displayName, pictureUrl) {
   }
 }
 
-function verifyPhone() {
-  const phone = document.getElementById('phone-input').value;
-  if (phone.length < 9) return alert("Invalid number.");
-  userProfile = userProfile || {};
-  userProfile.isRegistered = true;
-  showDashboard();
-  fetchLeaderboard();
-  fetchNextMatch();
+async function submitPhone() {
+  const phone = document.getElementById('phone-input').value.trim();
+  const err   = document.getElementById('auth-error');
+  const btn   = document.getElementById('auth-btn');
+
+  err.style.display = 'none';
+  if (phone.length < 9) {
+    err.innerText = "Please enter a valid phone number (min 9 digits).";
+    err.style.display = 'block';
+    return;
+  }
+
+  btn.innerText = "Saving…";
+  btn.disabled  = true;
+
+  try {
+    const result = await post({ action:'registerPhone', lineId: userProfile.lineId, phone });
+    if (result.status === 'success') {
+      userProfile.isRegistered       = true;
+      userProfile.availableFootballs = result.availableFootballs;
+      userProfile.currentStreak      = result.currentStreak;
+      showEl('auth-screen', false);
+      showDashboard();
+      fetchLeaderboard();
+      fetchNextMatch();
+    } else {
+      err.innerText = result.message || "Something went wrong.";
+      err.style.display = 'block';
+    }
+  } catch {
+    err.innerText = "Network error — please try again.";
+    err.style.display = 'block';
+  }
+
+  btn.innerText = "Continue";
+  btn.disabled  = false;
 }
 
-/* ── Screen helpers ── */
-function show(id, on) {
-  const el = document.getElementById(id);
-  if (on) el.classList.add('active');
-  else    el.classList.remove('active');
-}
 
+/* ══════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════ */
 function showDashboard() {
-  show('auth-screen', false);
-  show('dashboard-screen', true);
+  showEl('auth-screen', false);
+  showEl('dashboard-screen', true);
   const pts = userProfile.availableFootballs || 0;
   const str = userProfile.currentStreak || 0;
   document.getElementById('user-footballs').innerText = fmt(pts);
@@ -87,35 +124,77 @@ function showDashboard() {
   document.getElementById('user-rank').innerText      = str >= 5 ? 'MVP' : str >= 3 ? 'CAPTAIN' : 'RESERVE';
 }
 
+
 /* ══════════════════════════════════════════
-   MATCH
+   MATCH + VOTED STATE
 ══════════════════════════════════════════ */
 async function fetchNextMatch() {
   try {
-    const res = await fetch(API_URL, { method:'POST', body: JSON.stringify({ action:'getNextMatch' }) });
-    currentMatchData = await res.json();
-    if (currentMatchData.status === "success") {
-      const d = new Date(currentMatchData.kickoff);
+    const md = await post({ action:'getNextMatch', lineId: userProfile.lineId });
+    currentMatchData = md;
+
+    if (md.status === "success") {
+      const d = new Date(md.kickoff);
       document.getElementById('next-match-time').innerText =
         d.toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-      document.getElementById('name-a').innerText = currentMatchData.teamA;
-      document.getElementById('flag-a').innerText = getFlag(currentMatchData.teamA);
-      document.getElementById('name-b').innerText = currentMatchData.teamB;
-      document.getElementById('flag-b').innerText = getFlag(currentMatchData.teamB);
-      startCountdown(currentMatchData.kickoff);
+
+      document.getElementById('name-a').innerText = md.teamA;
+      document.getElementById('flag-a').innerText = getFlag(md.teamA);
+      document.getElementById('name-b').innerText = md.teamB;
+      document.getElementById('flag-b').innerText = getFlag(md.teamB);
+
+      startCountdown(md.kickoff);
+      applyVotedState(md.userVote, md.teamA, md.teamB);
     } else {
       document.getElementById('next-match-time').innerText = "Tournament Ended";
     }
   } catch(e) { console.error(e); }
 }
 
+function applyVotedState(userVote, teamA, teamB) {
+  const btnA      = document.getElementById('btn-teamA');
+  const btnB      = document.getElementById('btn-teamB');
+  const statusRow = document.getElementById('voted-status-row');
+  const hintText  = document.getElementById('vote-hint-text');
+
+  // Reset
+  btnA.classList.remove('voted-for', 'voted-against');
+  btnB.classList.remove('voted-for', 'voted-against');
+  statusRow.classList.remove('show');
+
+  if (!userVote) {
+    // Not voted — normal tappable state
+    hintText.innerText = "Tap a team flag to place your prediction";
+    return;
+  }
+
+  // Apply voted styles
+  if (userVote === teamA) {
+    btnA.classList.add('voted-for');
+    btnB.classList.add('voted-against');
+  } else {
+    btnB.classList.add('voted-for');
+    btnA.classList.add('voted-against');
+  }
+
+  // Show status pill
+  document.getElementById('voted-status-text').innerText = `You picked ${userVote}`;
+  statusRow.classList.add('show');
+  hintText.innerText = "You've placed your prediction for this match";
+}
+
+/* Tap handler — block if already voted */
+function handleTeamTap(side) {
+  if (!currentMatchData || currentMatchData.status !== "success") return;
+  if (currentMatchData.userVote) return;  // already voted — do nothing
+  openVoteSheet(side);
+}
+
+
 /* ══════════════════════════════════════════
-   VOTE BOTTOM SHEET
-   openVoteSheet() — called only when a flag is tapped
+   VOTE SHEET
 ══════════════════════════════════════════ */
 function openVoteSheet(side) {
-  if (!currentMatchData || currentMatchData.status !== "success") return;
-
   voteTeamSide = side;
   votePoints   = MIN_PTS;
 
@@ -129,10 +208,9 @@ function openVoteSheet(side) {
   refreshStepper();
   clearQuickPills();
 
-  /* Show overlay + sheet */
   document.getElementById('vote-overlay').classList.add('open');
   document.getElementById('vote-sheet').classList.add('open');
-  document.body.style.overflow = 'hidden';  /* prevent background scroll */
+  document.body.style.overflow = 'hidden';
 }
 
 function closeVoteSheet() {
@@ -145,8 +223,7 @@ function closeVoteSheet() {
 function adjustPoints(delta) {
   const balance = userProfile?.availableFootballs || 0;
   const next    = votePoints + delta;
-  if (next < MIN_PTS)   return;
-  if (next > balance)   return;
+  if (next < MIN_PTS || next > balance) return;
   votePoints = next;
   refreshStepper();
   clearQuickPills();
@@ -157,10 +234,8 @@ function setPoints(amount) {
   if (amount > balance) return;
   votePoints = amount;
   refreshStepper();
-  /* Highlight matching pill */
   document.querySelectorAll('.quick-pill').forEach(p => {
-    const val = parseInt(p.innerText.replace(/,/g, ''));
-    p.classList.toggle('active', val === amount);
+    p.classList.toggle('active', parseInt(p.innerText.replace(/,/g,'')) === amount);
   });
 }
 
@@ -169,7 +244,6 @@ function refreshStepper() {
   document.getElementById('step-number').innerText = fmt(votePoints);
   const btn = document.getElementById('vote-confirm-btn');
   btn.disabled = (votePoints > balance || votePoints < MIN_PTS);
-  /* Visual feedback on minus button */
   const minusBtn = document.querySelectorAll('.step-btn')[0];
   if (minusBtn) minusBtn.style.opacity = votePoints <= MIN_PTS ? '0.3' : '1';
 }
@@ -187,14 +261,13 @@ async function confirmVote() {
   closeVoteSheet();
 
   try {
-    const res    = await fetch(API_URL, { method:'POST', body: JSON.stringify({
-      action: 'submitVote', lineId: userProfile.lineId, matchName, team: selectedTeam, points: pts
-    })});
-    const result = await res.json();
+    const result = await post({ action:'submitVote', lineId: userProfile.lineId, matchName, team: selectedTeam, points: pts });
     if (result.status === "success") {
-      const newTotal = result.newTotal;
-      document.getElementById('user-footballs').innerText = fmt(newTotal);
-      userProfile.availableFootballs = newTotal;
+      userProfile.availableFootballs = result.newTotal;
+      document.getElementById('user-footballs').innerText = fmt(result.newTotal);
+      // Mark voted on match card immediately
+      currentMatchData.userVote = selectedTeam;
+      applyVotedState(selectedTeam, currentMatchData.teamA, currentMatchData.teamB);
       alert(`✅ ${result.message}`);
     } else {
       alert(`❌ ${result.message}`);
@@ -202,8 +275,9 @@ async function confirmVote() {
   } catch { alert("Network error."); }
 }
 
+
 /* ══════════════════════════════════════════
-   CLAIM / ADD POINTS
+   CLAIM
 ══════════════════════════════════════════ */
 function toggleClaimForm() {
   const f = document.getElementById('claim-form');
@@ -218,14 +292,11 @@ async function submitClaim() {
   const btn        = document.getElementById('claim-btn');
 
   if (!amount || !billNumber || !passcode) return alert("All fields are required.");
-  btn.innerText     = "Verifying…";
+  btn.innerText = "Verifying…";
   msg.style.display = "none";
 
   try {
-    const res    = await fetch(API_URL, { method:'POST', body: JSON.stringify({
-      action: 'addPoints', lineId: userProfile.lineId, amount, passcode, billNumber
-    })});
-    const result = await res.json();
+    const result = await post({ action:'addPoints', lineId: userProfile.lineId, amount, passcode, billNumber });
     msg.style.display = "block";
     if (result.status === "success") {
       msg.style.color = "#1A4D2E";
@@ -247,32 +318,49 @@ async function submitClaim() {
   btn.innerText = "Authorize Points";
 }
 
+
 /* ══════════════════════════════════════════
-   LEADERBOARD
+   LEADERBOARD — competitive bar display
 ══════════════════════════════════════════ */
 async function fetchLeaderboard() {
   try {
-    const res   = await fetch(API_URL, { method:'POST', body: JSON.stringify({ action:'getLeaderboard' }) });
-    const users = await res.json();
+    const users = await post({ action:'getLeaderboard' });
     const list  = document.getElementById('leaderboard-list');
     list.innerHTML = "";
 
-    const medals = ["🥇","🥈","🥉","4","5"];
-    const colors  = ["#E8A020","#9BA5B4","#B87333","rgba(26,77,46,.32)","rgba(26,77,46,.32)"];
+    if (!users || users.length === 0) {
+      list.innerHTML = '<p style="font-size:.78rem;color:rgba(26,77,46,.4);text-align:center;padding:8px 0;">No players yet</p>';
+      return;
+    }
+
+    const medals     = ["🥇","🥈","🥉","4","5"];
+    const posColors  = ["#E8A020","#9BA5B4","#B87333","rgba(26,77,46,.32)","rgba(26,77,46,.32)"];
+    const maxPts     = users[0].points || 1;  // for bar scaling
 
     users.forEach((u, i) => {
+      const barPct = Math.max(8, Math.round((u.points / maxPts) * 100));
+      const isFirst = i === 0;
       list.innerHTML += `
-        <div class="lb-row">
+        <div class="lb-row${isFirst ? ' lb-first' : ''}">
           <div class="lb-left">
-            <span class="lb-pos" style="color:${colors[i]}">${medals[i]}</span>
-            <img src="${u.pic}" class="lb-avatar" alt="">
-            <span class="lb-name">${u.name}</span>
+            <span class="lb-pos" style="color:${posColors[i]}">${medals[i]}</span>
+            <img src="${u.pic}" class="lb-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=235E44&color=FFF1DA'" alt="">
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">
+              <span class="lb-name">${u.name}</span>
+              <div class="lb-bar-wrap">
+                <div class="lb-bar" style="width:${barPct}%"></div>
+              </div>
+            </div>
           </div>
-          <span class="lb-score">🔥${u.streak} &nbsp;·&nbsp; ${fmt(u.points)} pts</span>
+          <div class="lb-right">
+            <span class="lb-pts">${fmt(u.points)}</span>
+            <span class="lb-streak">🔥 ${u.streak} streak</span>
+          </div>
         </div>`;
     });
   } catch(e) { console.error(e); }
 }
+
 
 /* ══════════════════════════════════════════
    COUNTDOWN
