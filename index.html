@@ -13,15 +13,14 @@
     <div id="app">
         
         <div id="loading-screen" class="screen active" style="justify-content: center; height: 80vh;">
-            <h3 style="color: var(--brand-green);">CONNECTING TO BIANCA...</h3>
-            <p class="muted">Please wait</p>
+            <h3 style="color: var(--brand-green);">LOADING BIANCA...</h3>
         </div>
 
         <div id="auth-screen" class="screen">
-            <h1>BIANCA CLUB</h1>
-            <p>Link your phone number to enter the prediction pool.</p>
-            <input type="tel" id="phone-input" class="mono" placeholder="08X-XXX-XXXX">
-            <button onclick="verifyPhone()">VERIFY CREDENTIALS</button>
+            <h1>JOIN THE GAME</h1>
+            <p>Enter your phone number to start predicting and winning.</p>
+            <input type="tel" id="phone-input" class="mono" inputmode="numeric" pattern="[0-9]*" placeholder="08X-XXX-XXXX">
+            <button onclick="verifyPhone()">START PLAYING</button>
         </div>
 
         <div id="dashboard-screen" class="screen">
@@ -29,16 +28,18 @@
             <div class="status-badge">
                 <div class="shield"><span id="user-rank">...</span></div>
                 <div class="points-display"><span id="user-footballs" class="mono">0</span> <span style="font-size: 1rem;">PTS</span></div>
-                <div class="streak-display">🔥 <span id="user-streak" class="mono">0</span> MATCH STREAK</div>
+                <div class="streak-display">🔥 <span id="user-streak" class="mono">0</span> WIN STREAK</div>
             </div>
 
-            <!-- Redesigned Next Game Card -->
+            <!-- Enhanced Prediction Card -->
             <div class="dashboard-module" style="padding: 15px;">
                 <div class="match-header">
-                    <span>Next Game</span>
+                    <span>UPCOMING MATCH</span>
                     <span id="next-match-time" style="color: var(--brand-gold);">Loading...</span>
                 </div>
                 
+                <p class="muted" style="margin-bottom: 15px; font-weight: 600;">Who will win? Tap a flag to vote (Cost: 1 PT)</p>
+
                 <div class="match-teams">
                     <div class="team-btn" onclick="castVote('teamA')">
                         <div class="team-flag" id="flag-a">🏳️</div>
@@ -50,25 +51,28 @@
                         <span class="team-name" id="name-b">Team B</span>
                     </div>
                 </div>
-
-                <p class="mono" id="countdown-timer" style="font-size: 1.2rem; color: var(--brand-green); margin: 10px 0;">--:--:--:--</p>
-                <p class="muted" style="margin-bottom: 0;">Tap a team to spend 1 PT and vote.</p>
+                <p class="mono" id="countdown-timer" style="font-size: 1.1rem; color: var(--brand-green); margin-top: 15px; margin-bottom: 0;">--:--:--:--</p>
             </div>
 
-            <div class="claim-card">
-                <h3>CLAIM POINTS</h3>
-                <p class="muted">100 THB = 1 Point. Hand to staff to verify.</p>
-                <input type="number" id="spend-amount" class="mono" placeholder="Receipt Amount (THB)">
-                <input type="password" id="staff-passcode" class="mono" placeholder="Staff Passcode">
-                <button onclick="submitClaim()" id="claim-btn">AUTHORIZE</button>
-                <p id="claim-message" class="muted" style="margin-top: 10px; display: none;"></p>
-            </div>
-
+            <!-- Competitive Leaderboard -->
             <div class="dashboard-module">
-                <h3>GLOBAL TOP 5</h3>
-                <div id="leaderboard-list" style="text-align: left; width: 100%; margin-top: 10px;">
+                <h3>🏆 GLOBAL TOP 5</h3>
+                <div id="leaderboard-list" style="text-align: left; width: 100%; margin-top: 15px;">
                     <p class="muted">Loading scores...</p>
                 </div>
+            </div>
+
+            <!-- Hidden Claim Section -->
+            <div class="claim-toggle" onclick="toggleClaimForm()">
+                <span>+ ADD POINTS FROM RECEIPT</span>
+            </div>
+            
+            <div id="claim-form" style="display: none; width: 100%; margin-bottom: 30px;">
+                <input type="number" id="spend-amount" class="mono" inputmode="numeric" pattern="[0-9]*" placeholder="Receipt Amount (THB)">
+                <input type="number" id="bill-number" class="mono" inputmode="numeric" pattern="[0-9]*" placeholder="Bill / Receipt Number">
+                <input type="password" id="staff-passcode" class="mono" inputmode="numeric" pattern="[0-9]*" placeholder="Staff Passcode (Required)">
+                <button onclick="submitClaim()" id="claim-btn">AUTHORIZE POINTS</button>
+                <p id="claim-message" class="muted" style="margin-top: 10px; display: none;"></p>
             </div>
 
         </div>
