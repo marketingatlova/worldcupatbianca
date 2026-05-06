@@ -2,6 +2,18 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxszwMiMyv94ERtlM7vp8i0
 const LIFF_ID = "2009984765-j723B1C4"; 
 
 let userProfile = null;
+let currentMatchData = null;
+
+// Lightweight flag engine for the UI
+const getFlagEmoji = (countryName) => {
+    const flags = {
+        "Mexico": "🇲🇽", "South Africa": "🇿🇦", "Canada": "🇨🇦", "Switzerland": "🇨🇭",
+        "USA": "🇺🇸", "Australia": "🇦🇺", "Brazil": "🇧🇷", "Morocco": "🇲🇦",
+        "Germany": "🇩🇪", "France": "🇫🇷", "England": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Spain": "🇪🇸",
+        "Argentina": "🇦🇷", "Portugal": "🇵🇹", "Italy": "🇮🇹", "Netherlands": "🇳🇱"
+    };
+    return flags[countryName] || "🏳️";
+};
 
 document.addEventListener("DOMContentLoaded", () => {
     initializeLiff();
@@ -18,7 +30,6 @@ async function initializeLiff() {
         }
     } catch (err) {
         console.error("LIFF failed", err);
-        // Fallback if LIFF fails so it doesn't stay black
         document.getElementById('loading-screen').classList.remove('active');
         document.getElementById('auth-screen').classList.add('active');
     }
@@ -43,7 +54,6 @@ async function fetchUserData(lineId, displayName) {
             document.getElementById('auth-screen').classList.add('active');
         }
     } catch (error) { 
-        console.error("Error:", error); 
         document.getElementById('loading-screen').innerHTML = "<h3 style='color:red;'>CONNECTION ERROR</h3><p>Please refresh.</p>";
     }
 }
@@ -70,6 +80,64 @@ function verifyPhone() {
     fetchNextMatch();
 }
 
+async function fetchNextMatch() {
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getNextMatch' })
+        });
+        currentMatchData = await res.json();
+        
+        if (currentMatchData.status === "success") {
+            const dateObj = new Date(currentMatchData.kickoff);
+            document.getElementById('next-match-time').innerText = dateObj.toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit'});
+            
+            document.getElementById('name-a').innerText = currentMatchData.teamA;
+            document.getElementById('flag-a').innerText = getFlagEmoji(currentMatchData.teamA);
+            
+            document.getElementById('name-b').innerText = currentMatchData.teamB;
+            document.getElementById('flag-b').innerText = getFlagEmoji(currentMatchData.teamB);
+
+            startCountdown(currentMatchData.kickoff);
+        } else {
+            document.getElementById('next-match-time').innerText = "Tournament Ended";
+        }
+    } catch (e) { console.error(e); }
+}
+
+// THE VOTING ENGINE
+async function castVote(teamSide) {
+    if (!currentMatchData || currentMatchData.status !== "success") return;
+    
+    const selectedTeam = teamSide === 'teamA' ? currentMatchData.teamA : currentMatchData.teamB;
+    const matchName = `${currentMatchData.teamA} vs ${currentMatchData.teamB}`;
+    
+    if (!confirm(`Spend 1 Point to vote for ${selectedTeam}?`)) return;
+
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: 'submitVote', 
+                lineId: userProfile.lineId, 
+                matchName: matchName, 
+                team: selectedTeam 
+            })
+        });
+        const result = await res.json();
+        
+        if (result.status === "success") {
+            alert(`✅ ${result.message}`);
+            document.getElementById('user-footballs').innerText = result.newTotal;
+            userProfile.availableFootballs = result.newTotal;
+        } else {
+            alert(`❌ ${result.message}`);
+        }
+    } catch (e) {
+        alert("Network error processing vote.");
+    }
+}
+
 async function submitClaim() {
     const amount = document.getElementById('spend-amount').value;
     const passcode = document.getElementById('staff-passcode').value;
@@ -90,9 +158,10 @@ async function submitClaim() {
         
         msg.style.display = "block";
         if (result.status === "success") {
-            msg.style.color = "#FAB31E";
+            msg.style.color = "#235E44"; // Bianca Green
             msg.innerText = result.message;
             document.getElementById('user-footballs').innerText = result.newTotal;
+            userProfile.availableFootballs = result.newTotal;
             document.getElementById('spend-amount').value = "";
             document.getElementById('staff-passcode').value = "";
         } else {
@@ -114,29 +183,11 @@ async function fetchLeaderboard() {
         list.innerHTML = "";
         
         users.forEach((u, index) => {
-            list.innerHTML += `<div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(35,94,68,0.5); padding: 8px 0; font-size: 0.85rem;">
-                <span><span style="color: #FAB31E;">${index + 1}.</span> ${u.name}</span>
+            list.innerHTML += `<div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(35,94,68,0.2); padding: 8px 0; font-size: 0.85rem;">
+                <span style="color: var(--brand-green); font-weight: 600;"><span style="color: var(--brand-gold); margin-right: 5px;">${index + 1}.</span> ${u.name}</span>
                 <span class="mono">🔥${u.streak} | ${u.points} PTS</span>
             </div>`;
         });
-    } catch (e) { console.error(e); }
-}
-
-async function fetchNextMatch() {
-    try {
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'getNextMatch' })
-        });
-        const match = await res.json();
-        
-        if (match.status === "success") {
-            document.getElementById('next-match-teams').innerText = match.matchName;
-            startCountdown(match.kickoff);
-        } else {
-            document.getElementById('next-match-teams').innerText = match.matchName;
-            document.getElementById('countdown-timer').innerText = "00:00:00:00";
-        }
     } catch (e) { console.error(e); }
 }
 
