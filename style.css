@@ -1,28 +1,27 @@
 :root {
-    --bg-color: #1A1A1A;
-    --accent-gold: #D4AF37;
-    --text-primary: #FFFFFF;
-    --text-muted: #B0B0B0;
-    --card-bg: rgba(255, 255, 255, 0.03);
+    --bg-color: #000000;
+    --brand-green: #235E44;
+    --brand-gold: #FAB31E;
+    --text-cream: #FFF1DA;
+    --card-bg: rgba(35, 94, 68, 0.15); /* Subtle Bianca Green tint */
 }
 
-/* Force True Full Screen */
 html, body {
     background-color: var(--bg-color);
-    color: var(--text-primary);
+    color: var(--text-cream);
     font-family: 'Sora', sans-serif;
     margin: 0;
     padding: 0;
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Aligns to top so it scrolls nicely */
+    align-items: flex-start;
 }
 
 #app {
     width: 100%;
     max-width: 480px;
-    padding: 20px;
+    padding: 15px; /* Reduced padding */
     box-sizing: border-box;
 }
 
@@ -32,66 +31,68 @@ html, body {
     flex-direction: column; 
     align-items: center; 
     text-align: center; 
-    animation: fadeIn 0.5s ease;
+    animation: fadeIn 0.4s ease;
 }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .mono { font-family: 'Cascadia Mono', monospace; }
 
-h1, h3 { 
-    font-weight: 600; 
-    letter-spacing: 2px; 
-    color: var(--accent-gold); 
-}
+/* Reduced typography sizing across the board */
+h1 { font-size: 1.2rem; font-weight: 600; letter-spacing: 2px; color: var(--brand-gold); margin-bottom: 5px; }
+h3 { font-size: 1rem; font-weight: 600; letter-spacing: 1px; color: var(--brand-gold); margin-bottom: 5px; }
 
 p, .muted { 
-    color: var(--text-muted); 
+    color: rgba(255, 241, 218, 0.7); /* Muted Cream */
     font-weight: 300; 
-    font-size: 0.85rem;
+    font-size: 0.75rem; /* Smaller, cleaner text */
+    margin-top: 0;
 }
 
 input {
     background: var(--bg-color); 
-    border: 1px solid var(--accent-gold); 
-    color: var(--text-primary);
-    padding: 15px; 
+    border: 1px solid var(--brand-green); 
+    color: var(--text-cream);
+    padding: 12px; /* Smaller inputs */
     width: 100%; 
     box-sizing: border-box;
-    margin: 10px 0; 
+    margin: 8px 0; 
     text-align: center;
-    font-size: 1.1rem; 
+    font-size: 0.9rem; 
     outline: none;
-    border-radius: 8px;
+    border-radius: 6px;
 }
 
+input:focus { border-color: var(--brand-gold); }
+
 button {
-    background: var(--accent-gold); 
-    color: var(--bg-color); 
-    border: none;
-    padding: 15px; 
+    background: var(--brand-green); 
+    color: var(--text-cream); 
+    border: 1px solid var(--brand-gold);
+    padding: 12px; 
     font-family: 'Sora', sans-serif; 
     font-weight: 600;
     letter-spacing: 1px; 
+    font-size: 0.85rem;
     cursor: pointer; 
-    border-radius: 8px;
+    border-radius: 6px;
     width: 100%;
     margin-top: 10px;
-    transition: 0.2s opacity;
+    transition: 0.2s all;
 }
 
-button:active { opacity: 0.8; }
+button:active { background: var(--brand-gold); color: var(--bg-color); }
 
-.status-badge, .claim-card {
-    border: 1px solid rgba(212, 175, 55, 0.3); 
-    border-radius: 12px; 
-    padding: 25px;
+.status-badge, .claim-card, .dashboard-module {
+    border: 1px solid var(--brand-green); 
+    border-radius: 10px; 
+    padding: 15px; /* Tighter padding inside cards */
     width: 100%; 
     box-sizing: border-box; 
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     background: var(--card-bg);
 }
 
-.shield { font-size: 1.2rem; font-weight: 600; margin-bottom: 15px; letter-spacing: 3px; }
-.points-display { font-size: 3rem; color: var(--accent-gold); margin-bottom: 5px; }
-.streak-display { font-size: 0.9rem; color: var(--text-muted); letter-spacing: 1px; }
+.shield { font-size: 1rem; font-weight: 600; margin-bottom: 10px; letter-spacing: 2px; color: var(--text-cream); }
+.points-display { font-size: 2.2rem; color: var(--brand-gold); margin-bottom: 0; line-height: 1; }
+.streak-display { font-size: 0.8rem; color: var(--text-cream); margin-top: 8px; }
