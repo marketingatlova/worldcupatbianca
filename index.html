@@ -10,160 +10,160 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="app">
 
-  <!-- LOADING -->
-  <div id="loading-screen" class="screen active">
-    <div class="load-ball">⚽</div>
-    <p class="load-text">Loading</p>
-  </div>
+  <!-- ═══════════════════════════════════
+       MAIN APP
+       ═══════════════════════════════════ -->
+  <div id="app">
 
-  <!-- AUTH -->
-  <div id="auth-screen" class="screen">
-    <div class="app-header">
-      <span class="header-wordmark">Predictor</span>
-      <span class="header-tag">World Cup 2026</span>
-    </div>
-    <div class="card auth-card">
-      <p class="auth-eyebrow">Player Registration</p>
-      <h1 class="auth-headline">Join the Game</h1>
-      <p class="auth-sub">Enter your phone number to start predicting matches and climbing the leaderboard.</p>
-      <input type="tel" id="phone-input" inputmode="numeric" pattern="[0-9]*" placeholder="08X-XXX-XXXX">
-      <button onclick="verifyPhone()">Start Playing</button>
-    </div>
-  </div>
-
-  <!-- DASHBOARD -->
-  <div id="dashboard-screen" class="screen">
-
-    <div class="app-header">
-      <span class="header-wordmark">Predictor</span>
-      <span class="header-tag">World Cup 2026</span>
+    <!-- LOADING -->
+    <div id="loading-screen" class="screen active">
+      <span class="load-ball">⚽</span>
+      <p class="load-text">Loading</p>
     </div>
 
-    <!-- Player stat card -->
-    <div class="card stat-card">
-      <div class="rank-col">
-        <span class="rank-eyebrow">Rank</span>
-        <span class="rank-value" id="user-rank">—</span>
+    <!-- AUTH -->
+    <div id="auth-screen" class="screen">
+      <div class="app-header">
+        <span class="header-wordmark">Predictor</span>
+        <span class="header-tag">World Cup 2026</span>
       </div>
-      <div class="data-col">
-        <div class="pts-row">
-          <span class="pts-big" id="user-footballs">0</span>
-          <span class="pts-unit">Points</span>
-        </div>
-        <div class="streak-chip">
-          🔥 <span id="user-streak">0</span>&nbsp;Win Streak
-        </div>
+      <div class="card auth-card">
+        <p class="auth-eyebrow">Player Registration</p>
+        <h1 class="auth-headline">Join the Game</h1>
+        <p class="auth-sub">Enter your phone number to start predicting matches and climbing the leaderboard.</p>
+        <input type="tel" id="phone-input" inputmode="numeric" pattern="[0-9]*" placeholder="08X-XXX-XXXX">
+        <button onclick="verifyPhone()">Start Playing</button>
       </div>
     </div>
 
-    <!-- Match prediction card -->
-    <div class="card match-card">
-      <div class="match-row-top">
-        <span class="section-label">⚽ Upcoming Match</span>
-        <span class="time-badge" id="next-match-time">Loading…</span>
+    <!-- DASHBOARD -->
+    <div id="dashboard-screen" class="screen">
+
+      <div class="app-header">
+        <span class="header-wordmark">Predictor</span>
+        <span class="header-tag">World Cup 2026</span>
       </div>
 
-      <p class="vote-hint">Tap a team to predict the winner</p>
-
-      <div class="teams-grid">
-        <div class="team-btn" onclick="openVoteSheet('teamA')">
-          <div class="team-flag" id="flag-a">🏳️</div>
-          <span class="team-name" id="name-a">Team A</span>
+      <!-- Player stats -->
+      <div class="card stat-card">
+        <div class="rank-col">
+          <span class="rank-eyebrow">Rank</span>
+          <span class="rank-value" id="user-rank">—</span>
         </div>
-        <div class="vs-sep">VS</div>
-        <div class="team-btn" onclick="openVoteSheet('teamB')">
-          <div class="team-flag" id="flag-b">🏳️</div>
-          <span class="team-name" id="name-b">Team B</span>
+        <div class="data-col">
+          <div class="pts-row">
+            <span class="pts-big" id="user-footballs">0</span>
+            <span class="pts-unit">Points</span>
+          </div>
+          <div class="streak-chip">🔥 <span id="user-streak">0</span>&nbsp;Win Streak</div>
         </div>
       </div>
 
-      <div class="countdown-row">
-        <div id="countdown-timer">- - : - -</div>
-        <div class="countdown-sub">Kickoff countdown</div>
+      <!-- Match prediction -->
+      <div class="card match-card">
+        <div class="match-row-top">
+          <span class="section-label">⚽ Upcoming Match</span>
+          <span class="time-badge" id="next-match-time">Loading…</span>
+        </div>
+        <p class="vote-hint">Tap a team flag to place your prediction</p>
+        <div class="teams-grid">
+          <div class="team-btn" onclick="openVoteSheet('teamA')">
+            <div class="team-flag" id="flag-a">🏳️</div>
+            <span class="team-name" id="name-a">Team A</span>
+          </div>
+          <div class="vs-sep">VS</div>
+          <div class="team-btn" onclick="openVoteSheet('teamB')">
+            <div class="team-flag" id="flag-b">🏳️</div>
+            <span class="team-name" id="name-b">Team B</span>
+          </div>
+        </div>
+        <div class="countdown-row">
+          <div id="countdown-timer">-- : -- : --</div>
+          <div class="countdown-sub">Kickoff Countdown</div>
+        </div>
       </div>
+
+      <!-- Leaderboard -->
+      <div class="card lb-card">
+        <div class="lb-header">
+          <span class="lb-title">Global Top 5</span>
+          <span>🏆</span>
+        </div>
+        <div id="leaderboard-list">
+          <p style="font-size:.78rem;color:rgba(26,77,46,.4);text-align:center;padding:8px 0;">Loading table…</p>
+        </div>
+      </div>
+
+      <!-- Add points -->
+      <div class="card claim-card">
+        <div class="claim-toggle" onclick="toggleClaimForm()">
+          <span class="claim-plus">＋</span>
+          <span class="claim-toggle-label">Add Points from Receipt</span>
+        </div>
+        <div id="claim-form">
+          <p class="claim-note">100 THB = 1 Point · Staff verifies</p>
+          <input type="number"   id="spend-amount"   inputmode="numeric" pattern="[0-9]*" placeholder="Receipt Amount (THB)">
+          <input type="number"   id="bill-number"    inputmode="numeric" pattern="[0-9]*" placeholder="Bill / Receipt Number">
+          <input type="password" id="staff-passcode" inputmode="numeric" pattern="[0-9]*" placeholder="Staff Passcode">
+          <button onclick="submitClaim()" id="claim-btn">Authorize Points</button>
+          <p id="claim-message"></p>
+        </div>
+      </div>
+
+    </div><!-- /dashboard-screen -->
+  </div><!-- /app -->
+
+
+  <!-- ═══════════════════════════════════════════════
+       VOTE BOTTOM SHEET
+       Lives OUTSIDE #app so body flex / max-width
+       don't clip or affect its fixed positioning.
+       Fully hidden via CSS until JS adds .open
+       ═══════════════════════════════════════════════ -->
+
+  <!-- Backdrop -->
+  <div id="vote-overlay" onclick="closeVoteSheet()"></div>
+
+  <!-- Sheet -->
+  <div id="vote-sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-team-hero">
+      <span class="sheet-flag-big" id="sheet-flag">🏳️</span>
+      <span class="sheet-team-name" id="sheet-team-name">Team</span>
+    </div>
+    <p class="sheet-eyebrow">Predict this team wins</p>
+
+    <div class="sheet-divider"></div>
+
+    <p class="stepper-label">Points to Redeem</p>
+
+    <div class="stepper-row">
+      <button class="step-btn" onclick="adjustPoints(-100)">−</button>
+      <div class="step-display">
+        <span class="step-number" id="step-number">100</span>
+        <span class="step-unit">pts</span>
+      </div>
+      <button class="step-btn" onclick="adjustPoints(+100)">＋</button>
     </div>
 
-    <!-- Leaderboard -->
-    <div class="card lb-card">
-      <div class="lb-header">
-        <span class="lb-title">Global Top 5</span>
-        <span>🏆</span>
-      </div>
-      <div id="leaderboard-list">
-        <p style="font-size:.78rem;color:rgba(26,77,46,.4);text-align:center;">Loading table…</p>
-      </div>
+    <div class="quick-row">
+      <span class="quick-pill" onclick="setPoints(100)">100</span>
+      <span class="quick-pill" onclick="setPoints(500)">500</span>
+      <span class="quick-pill" onclick="setPoints(1000)">1,000</span>
+      <span class="quick-pill" onclick="setPoints(2500)">2,500</span>
+      <span class="quick-pill" onclick="setPoints(5000)">5,000</span>
     </div>
 
-    <!-- Add points from receipt -->
-    <div class="card claim-card">
-      <div class="claim-toggle" onclick="toggleClaimForm()">
-        <span class="claim-plus">＋</span>
-        <span class="claim-toggle-label">Add Points from Receipt</span>
-      </div>
-      <div id="claim-form">
-        <p class="claim-note">100 THB = 1 Point · Staff verifies</p>
-        <input type="number"   id="spend-amount"   inputmode="numeric" pattern="[0-9]*" placeholder="Receipt Amount (THB)">
-        <input type="number"   id="bill-number"    inputmode="numeric" pattern="[0-9]*" placeholder="Bill / Receipt Number">
-        <input type="password" id="staff-passcode" inputmode="numeric" pattern="[0-9]*" placeholder="Staff Passcode">
-        <button onclick="submitClaim()" id="claim-btn">Authorize Points</button>
-        <p id="claim-message"></p>
-      </div>
-    </div>
+    <p class="balance-line">Balance: <strong id="sheet-balance">0 pts</strong></p>
 
-  </div><!-- /dashboard -->
-</div><!-- /app -->
-
-<!-- ════════════════════════════════════
-     VOTE BOTTOM SHEET (hidden by default)
-     Revealed only when a team flag is tapped
-     ════════════════════════════════════ -->
-<div id="vote-overlay" onclick="closeVoteSheet()"></div>
-
-<div id="vote-sheet">
-  <div class="sheet-handle"></div>
-
-  <!-- Selected team display -->
-  <div class="sheet-vs">
-    <span class="sheet-flag-big" id="sheet-flag">🏳️</span>
-    <span class="sheet-team-name" id="sheet-team-name">Team</span>
+    <button id="vote-confirm-btn" onclick="confirmVote()">Confirm Prediction</button>
+    <span class="sheet-cancel" onclick="closeVoteSheet()">Cancel</span>
   </div>
-  <p class="sheet-eyebrow">Predict this team wins</p>
 
-  <div class="sheet-divider"></div>
 
-  <!-- Stepper -->
-  <p class="stepper-label">Points to Redeem</p>
-  <div class="stepper-row">
-    <button class="step-btn" onclick="adjustPoints(-100)">−</button>
-    <div class="step-display">
-      <span class="step-number" id="step-number">100</span>
-      <span class="step-unit">pts</span>
-    </div>
-    <button class="step-btn" onclick="adjustPoints(+100)">＋</button>
-  </div>
-
-  <!-- Quick amounts -->
-  <div class="quick-row">
-    <span class="quick-pill" onclick="setPoints(100)">100</span>
-    <span class="quick-pill" onclick="setPoints(500)">500</span>
-    <span class="quick-pill" onclick="setPoints(1000)">1,000</span>
-    <span class="quick-pill" onclick="setPoints(2500)">2,500</span>
-    <span class="quick-pill" onclick="setPoints(5000)">5,000</span>
-  </div>
-
-  <!-- Balance -->
-  <p class="balance-line">
-    Your balance: <strong id="sheet-balance">0 pts</strong>
-  </p>
-
-  <!-- Confirm -->
-  <button id="vote-confirm-btn" onclick="confirmVote()">Confirm Prediction</button>
-  <span class="sheet-cancel" onclick="closeVoteSheet()">Cancel</span>
-</div>
-
-<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<script src="app.js"></script>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
