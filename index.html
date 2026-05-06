@@ -13,38 +13,50 @@
     <div id="app">
         <!-- The Verification Gate -->
         <div id="auth-screen" class="screen">
-            <h1>ENTER THE CLUB</h1>
-            <p>Link your phone number to access your Footballs.</p>
+            <h1>BIANCA CLUB</h1>
+            <p>Link your phone number to enter the prediction pool.</p>
             <input type="tel" id="phone-input" class="mono" placeholder="08X-XXX-XXXX">
             <button onclick="verifyPhone()">VERIFY CREDENTIALS</button>
         </div>
 
-        <!-- The Prestige Dashboard -->
+        <!-- The Global Dashboard -->
         <div id="dashboard-screen" class="screen">
+            
+            <!-- Personal Status -->
             <div class="status-badge">
-                <div class="shield">
-                    <span id="user-rank">AUTHENTICATING...</span>
-                </div>
-                <div class="points-display">
-                    <span id="user-footballs" class="mono">0</span> <span class="muted">FOOTBALLS</span>
-                </div>
-                <div class="streak-display">
-                    🔥 <span id="user-streak" class="mono">0</span> MATCH STREAK
+                <div class="shield"><span id="user-rank">...</span></div>
+                <div class="points-display"><span id="user-footballs" class="mono">0</span> <span style="font-size: 1rem; color: #FFF1DA;">PTS</span></div>
+                <div class="streak-display">🔥 <span id="user-streak" class="mono">0</span> MATCH STREAK</div>
+            </div>
+
+            <!-- Countdown Timer -->
+            <div class="dashboard-module">
+                <h3>NEXT KICKOFF</h3>
+                <p class="mono" id="countdown-timer" style="font-size: 1.5rem; color: var(--brand-gold); margin: 10px 0;">--:--:--:--</p>
+                <p class="muted">Mexico vs. South Africa</p>
+                <button onclick="alert('Predictions open 24 hours before kickoff.')" style="background: transparent; border: 1px solid var(--brand-gold);">SPEND POINTS TO VOTE</button>
+            </div>
+
+            <!-- Add Points Interface -->
+            <div class="claim-card">
+                <h3>CLAIM POINTS</h3>
+                <p class="muted">100 THB = 1 Point. Hand to staff to verify.</p>
+                <input type="number" id="spend-amount" class="mono" placeholder="Receipt Amount (THB)">
+                <input type="password" id="staff-passcode" class="mono" placeholder="Staff Passcode">
+                <button onclick="submitClaim()" id="claim-btn">AUTHORIZE</button>
+                <p id="claim-message" class="muted" style="margin-top: 10px; display: none;"></p>
+            </div>
+
+            <!-- Global Leaderboard -->
+            <div class="dashboard-module">
+                <h3>GLOBAL TOP 5</h3>
+                <div id="leaderboard-list" style="text-align: left; width: 100%; margin-top: 10px;">
+                    <p class="muted">Loading scores...</p>
                 </div>
             </div>
 
-            <!-- NEW: The Add Points Interface -->
-            <div class="claim-card">
-                <h3>CLAIM FOOTBALLS</h3>
-                <p class="muted">100 THB = 1 Football. Hand to staff to verify.</p>
-                <input type="number" id="spend-amount" class="mono" placeholder="Receipt Amount (THB)">
-                <input type="password" id="staff-passcode" class="mono" placeholder="Staff Passcode (6-Digits)">
-                <button onclick="submitClaim()" id="claim-btn">VERIFY & ADD</button>
-                <p id="claim-message" class="muted" style="margin-top: 15px; display: none;"></p>
-            </div>
         </div>
     </div>
-
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="app.js"></script>
 </body>
