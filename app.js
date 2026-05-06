@@ -109,7 +109,8 @@ async function castVote(teamSide) {
     const selectedTeam = teamSide === 'teamA' ? currentMatchData.teamA : currentMatchData.teamB;
     const matchName = `${currentMatchData.teamA} vs ${currentMatchData.teamB}`;
     
-    if (!confirm(`Spend 1 Point to vote for ${selectedTeam}?`)) return;
+    // Updated prompt for 100 points
+    if (!confirm(`Spend 100 Points to vote for ${selectedTeam}?`)) return;
 
     try {
         const res = await fetch(API_URL, {
