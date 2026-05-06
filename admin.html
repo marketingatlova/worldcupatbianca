@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Match Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0D1610;
+      --surface:    #131F16;
+      --surface2:   #192B1C;
+      --border:     rgba(255,255,255,0.07);
+      --green:      #1A4D2E;
+      --green-bright: #2ECC71;
+      --gold:       #E8A020;
+      --red:        #E74C3C;
+      --white:      #F0F4F0;
+      --muted:      rgba(240,244,240,0.38);
+      --mono:       'DM Mono', monospace;
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── LOCK SCREEN ── */
+    #lock-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      padding: 20px;
+    }
+
+    .lock-icon { font-size: 2.5rem; margin-bottom: 16px; }
+
+    .lock-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 4px;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+
+    .lock-sub {
+      font-size: .75rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-bottom: 28px;
+    }
+
+    .lock-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .lock-box input {
+      width: 100%;
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-family: var(--mono);
+      font-size: .95rem;
+      color: var(--white);
+      outline: none;
+      text-align: center;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+    }
+
+    .lock-box input:focus {
+      border-color: rgba(46,204,113,.3);
+      background: rgba(255,255,255,.08);
+    }
+
+    .lock-error {
+      font-size: .72rem;
+      color: var(--red);
+      text-align: center;
+      margin-top: -4px;
+      margin-bottom: 10px;
+      min-height: 18px;
+    }
+
+    /* ── MAIN SHELL ── */
+    #admin-shell { display: none; }
+
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .topbar-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 3px;
+      color: var(--white);
+    }
+
+    .topbar-title span { color: var(--gold); }
+
+    .topbar-pill {
+      font-family: var(--mono);
+      font-size: .62rem;
+      color: var(--green-bright);
+      background: rgba(46,204,113,.1);
+      border: 1px solid rgba(46,204,113,.2);
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+    }
+
+    .admin-body {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 20px 16px 60px;
+    }
+
+    /* ── SECTION HEADER ── */
+    .section-head {
+      font-family: var(--mono);
+      font-size: .62rem;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-head::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .card-inner { padding: 18px; }
+
+    /* ── CURRENT MATCH HERO ── */
+    .match-hero {
+      background: linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%);
+      border: 1px solid rgba(232,160,32,.2);
+      border-radius: 14px;
+      padding: 20px 18px;
+      margin-bottom: 12px;
+    }
+
+    .match-hero-label {
+      font-family: var(--mono);
+      font-size: .58rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 14px;
+    }
+
+    .match-teams-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .match-team {
+      flex: 1;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 8px;
+      text-align: center;
+    }
+
+    .match-team .flag { font-size: 2rem; display: block; margin-bottom: 6px; }
+    .match-team .name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: .95rem;
+      letter-spacing: 1.5px;
+      color: var(--white);
+    }
+
+    .match-vs {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      color: var(--gold);
+      opacity: .5;
+      flex-shrink: 0;
+    }
+
+    .match-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: .65rem;
+      color: var(--muted);
+    }
+
+    .match-id-badge {
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+    }
+
+    /* ── WINNER BUTTONS ── */
+    .winner-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .win-btn {
+      padding: 13px 8px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: rgba(255,255,255,.03);
+      color: var(--white);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: .95rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all .18s;
+      text-align: center;
+      width: 100%;
+    }
+
+    .win-btn:hover { border-color: var(--gold); background: rgba(232,160,32,.08); color: var(--gold); }
+
+    .win-btn.selected {
+      background: rgba(46,204,113,.1);
+      border-color: var(--green-bright);
+      color: var(--green-bright);
+    }
+
+    .draw-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: .7rem;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: all .15s;
+      margin-bottom: 14px;
+    }
+    .draw-btn:hover { border-color: rgba(255,255,255,.2); color: var(--white); }
+    .draw-btn.selected { border-color: rgba(255,255,255,.3); color: var(--white); background: rgba(255,255,255,.05); }
+
+    /* Score input row */
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .score-row input {
+      flex: 1;
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: var(--mono);
+      font-size: .85rem;
+      color: var(--white);
+      outline: none;
+      text-align: center;
+    }
+    .score-row input:focus { border-color: rgba(232,160,32,.4); }
+    .score-dash { color: var(--muted); font-family: var(--mono); font-size: 1.2rem; }
+
+    /* Confirm button */
+    .confirm-btn {
+      width: 100%;
+      background: var(--green-bright);
+      color: #0D1610;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .confirm-btn:hover { background: #27ae60; }
+    .confirm-btn:active { transform: scale(.98); }
+    .confirm-btn:disabled { background: rgba(255,255,255,.1); color: var(--muted); cursor: not-allowed; }
+
+    .danger-btn {
+      width: 100%;
+      background: transparent;
+      color: var(--red);
+      border: 1px solid rgba(231,76,60,.3);
+      border-radius: 10px;
+      padding: 13px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: .95rem;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .danger-btn:hover { background: rgba(231,76,60,.08); border-color: var(--red); }
+
+    /* ── STATUS LOG ── */
+    #status-log {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: .72rem;
+      color: var(--muted);
+      min-height: 80px;
+      max-height: 180px;
+      overflow-y: auto;
+      line-height: 1.8;
+    }
+
+    .log-ok   { color: var(--green-bright); }
+    .log-warn { color: var(--gold); }
+    .log-err  { color: var(--red); }
+
+    /* ── MATCH LIST ── */
+    .match-list-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: .78rem;
+    }
+    .match-list-row:last-child { border-bottom: none; }
+
+    .match-list-name { color: var(--white); font-weight: 500; flex: 1; }
+    .match-list-time { font-family: var(--mono); font-size: .65rem; color: var(--muted); margin-right: 12px; }
+
+    .status-pill {
+      font-family: var(--mono);
+      font-size: .58rem;
+      letter-spacing: 1px;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+    .pill-upcoming { color: var(--gold); background: rgba(232,160,32,.1); border: 1px solid rgba(232,160,32,.2); }
+    .pill-paid     { color: var(--green-bright); background: rgba(46,204,113,.1); border: 1px solid rgba(46,204,113,.2); }
+    .pill-pending  { color: var(--muted); background: rgba(255,255,255,.04); border: 1px solid var(--border); }
+    .pill-current  { color: #fff; background: var(--gold); border: 1px solid var(--gold); }
+
+    /* ── STAT TILES ── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .stat-tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 12px;
+      text-align: center;
+    }
+
+    .stat-tile-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-tile-label {
+      font-family: var(--mono);
+      font-size: .55rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── BUTTON generic ── */
+    button { cursor: pointer; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     LOCK SCREEN
+     ═══════════════════════════════════ -->
+<div id="lock-screen">
+  <div class="lock-icon">🔐</div>
+  <div class="lock-title">Match Control</div>
+  <p class="lock-sub">Admin access required</p>
+  <div class="lock-box">
+    <input type="password" id="admin-pass" inputmode="numeric" placeholder="Enter admin passcode"
+           onkeydown="if(event.key==='Enter') unlockAdmin()">
+    <p class="lock-error" id="lock-error"></p>
+    <button class="confirm-btn" onclick="unlockAdmin()">Unlock Panel</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     ADMIN SHELL
+     ═══════════════════════════════════ -->
+<div id="admin-shell">
+
+  <div class="topbar">
+    <div class="topbar-title">Match <span>Control</span></div>
+    <div class="topbar-pill" id="topbar-status">● LIVE</div>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- STATS ROW -->
+    <div class="stat-grid">
+      <div class="stat-tile">
+        <div class="stat-tile-num" id="stat-players">—</div>
+        <div class="stat-tile-label">Players</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-num" id="stat-votes">—</div>
+        <div class="stat-tile-label">Votes Cast</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-num" id="stat-matches-left">—</div>
+        <div class="stat-tile-label">Matches Left</div>
+      </div>
+    </div>
+
+    <!-- CURRENT MATCH -->
+    <p class="section-head">Current Match</p>
+
+    <div class="match-hero" id="current-match-hero">
+      <div class="match-hero-label">⚽ Next Up to Play</div>
+      <div class="match-teams-row">
+        <div class="match-team">
+          <span class="flag" id="admin-flag-a">🏳️</span>
+          <span class="name" id="admin-name-a">—</span>
+        </div>
+        <div class="match-vs">VS</div>
+        <div class="match-team">
+          <span class="flag" id="admin-flag-b">🏳️</span>
+          <span class="name" id="admin-name-b">—</span>
+        </div>
+      </div>
+      <div class="match-meta">
+        <span id="admin-match-id" class="match-id-badge">—</span>
+        <span id="admin-kickoff">—</span>
+      </div>
+    </div>
+
+    <!-- SET RESULT -->
+    <p class="section-head">Set Result &amp; Trigger Payout</p>
+
+    <div class="card">
+      <div class="card-inner">
+        <p style="font-size:.72rem;color:var(--muted);margin-bottom:14px;line-height:1.5;">
+          Select the winning team, enter the score, then confirm.<br>
+          This will set col F (Winning_Team) and run payouts automatically.
+        </p>
+
+        <div class="winner-row">
+          <button class="win-btn" id="win-btn-a" onclick="selectWinner('teamA')">
+            <span id="win-flag-a">🏳️</span> <span id="win-name-a">Team A</span>
+          </button>
+          <button class="win-btn" id="win-btn-b" onclick="selectWinner('teamB')">
+            <span id="win-flag-b">🏳️</span> <span id="win-name-b">Team B</span>
+          </button>
+        </div>
+
+        <button class="draw-btn" id="win-btn-draw" onclick="selectWinner('draw')">
+          Draw / Penalties — no winner payout
+        </button>
+
+        <div class="score-row">
+          <input type="number" id="score-a" placeholder="0" min="0" max="20">
+          <span class="score-dash">—</span>
+          <input type="number" id="score-b" placeholder="0" min="0" max="20">
+        </div>
+
+        <button class="confirm-btn" id="confirm-result-btn" onclick="confirmResult()" disabled>
+          Confirm Result + Pay Winners
+        </button>
+      </div>
+    </div>
+
+    <!-- RESET / NEXT MATCH -->
+    <p class="section-head">Game Flow</p>
+
+    <div class="card">
+      <div class="card-inner" style="display:flex;flex-direction:column;gap:10px;">
+        <button class="confirm-btn" style="background:var(--gold);color:#0D1610;" onclick="advanceToNextMatch()">
+          ⏭ Advance to Next Match
+        </button>
+        <button class="danger-btn" onclick="resetCurrentPredictions()">
+          ↺ Clear This Match's Predictions Only
+        </button>
+        <button class="danger-btn" style="color:rgba(231,76,60,.5);border-color:rgba(231,76,60,.15);" onclick="fullReset()">
+          ⚠ Full Game Reset (clears all points &amp; predictions)
+        </button>
+      </div>
+    </div>
+
+    <!-- STATUS LOG -->
+    <p class="section-head">Activity Log</p>
+    <div id="status-log">
+      <span class="log-warn">Waiting for actions…</span>
+    </div>
+
+    <!-- MATCH SCHEDULE -->
+    <p class="section-head" style="margin-top:24px;">Full Schedule</p>
+    <div class="card">
+      <div class="card-inner" id="match-schedule-list">
+        <span style="font-size:.75rem;color:var(--muted);">Loading…</span>
+      </div>
+    </div>
+
+  </div><!-- /admin-body -->
+</div><!-- /admin-shell -->
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxszwMiMyv94ERtlM7vp8i0FJ4Jg81BWXj6_dQm8u3yA_Y8su2CIngGqPIHV9EW2Bhe/exec";
+
+// ── Admin passcodes (match your Staff_Database HQ passcodes) ──
+const ADMIN_CODES = ["123456", "472910", "234567"];
+
+let currentMatch  = null;
+let selectedWinner = null;
+let adminPasscode  = null;
+
+const FLAG = {
+  "Mexico":"🇲🇽","South Africa":"🇿🇦","Canada":"🇨🇦","Switzerland":"🇨🇭",
+  "USA":"🇺🇸","Australia":"🇦🇺","Brazil":"🇧🇷","Morocco":"🇲🇦",
+  "Germany":"🇩🇪","France":"🇫🇷","England":"🇬🇧","Spain":"🇪🇸",
+  "Argentina":"🇦🇷","Portugal":"🇵🇹","Italy":"🇮🇹","Netherlands":"🇳🇱",
+  "Japan":"🇯🇵","Croatia":"🇭🇷","Belgium":"🇧🇪","Denmark":"🇩🇰",
+  "Colombia":"🇨🇴","Uruguay":"🇺🇾","Ghana":"🇬🇭","Chile":"🇨🇱",
+  "Nigeria":"🇳🇬","Ecuador":"🇪🇨","Saudi Arabia":"🇸🇦","South Korea":"🇰🇷",
+  "Senegal":"🇸🇳","Curaçao":"🏳️"
+};
+const getFlag = (n) => FLAG[n] || "🏳️";
+const post    = (body) => fetch(API_URL, { method:'POST', body: JSON.stringify(body) }).then(r => r.json());
+
+// ── LOCK ──
+function unlockAdmin() {
+  const code = document.getElementById('admin-pass').value.trim();
+  if (ADMIN_CODES.includes(code)) {
+    adminPasscode = code;
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('admin-shell').style.display = 'block';
+    loadDashboard();
+  } else {
+    document.getElementById('lock-error').innerText = "Invalid passcode. Try again.";
+    document.getElementById('admin-pass').value = "";
+  }
+}
+
+// ── LOAD ──
+async function loadDashboard() {
+  log("Loading match data…", "warn");
+  try {
+    const [matchData, stats] = await Promise.all([
+      post({ action: 'getNextMatch', lineId: null }),
+      post({ action: 'getAdminStats' })
+    ]);
+
+    // Stats tiles
+    if (stats && !stats.error) {
+      document.getElementById('stat-players').innerText      = stats.playerCount    || 0;
+      document.getElementById('stat-votes').innerText        = stats.totalVotes      || 0;
+      document.getElementById('stat-matches-left').innerText = stats.matchesLeft     || 0;
+    }
+
+    // Current match
+    if (matchData.status === "success") {
+      currentMatch = matchData;
+      renderCurrentMatch(matchData);
+    } else {
+      document.getElementById('current-match-hero').innerHTML =
+        '<p style="color:var(--gold);font-family:var(--mono);font-size:.8rem;text-align:center;padding:20px;">Tournament complete — all matches played.</p>';
+    }
+
+    // Schedule
+    const schedule = await post({ action: 'getFullSchedule' });
+    renderSchedule(schedule);
+
+    log("Dashboard loaded.", "ok");
+  } catch(e) {
+    log("Connection error: " + e.message, "err");
+  }
+}
+
+function renderCurrentMatch(m) {
+  document.getElementById('admin-flag-a').innerText = getFlag(m.teamA);
+  document.getElementById('admin-name-a').innerText = m.teamA;
+  document.getElementById('admin-flag-b').innerText = getFlag(m.teamB);
+  document.getElementById('admin-name-b').innerText = m.teamB;
+
+  const d = new Date(m.kickoff);
+  document.getElementById('admin-kickoff').innerText =
+    d.toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+  document.getElementById('admin-match-id').innerText = m.matchId || "—";
+
+  // Winner buttons
+  document.getElementById('win-flag-a').innerText = getFlag(m.teamA);
+  document.getElementById('win-name-a').innerText = m.teamA.toUpperCase();
+  document.getElementById('win-flag-b').innerText = getFlag(m.teamB);
+  document.getElementById('win-name-b').innerText = m.teamB.toUpperCase();
+}
+
+function renderSchedule(schedule) {
+  if (!schedule || !Array.isArray(schedule)) return;
+  const list = document.getElementById('match-schedule-list');
+  list.innerHTML = "";
+  schedule.forEach(m => {
+    const d = new Date(m.kickoff);
+    const time = d.toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    let pill = '';
+    if      (m.status === 'paid')    pill = '<span class="status-pill pill-paid">Paid</span>';
+    else if (m.status === 'pending') pill = '<span class="status-pill pill-pending">Pending Result</span>';
+    else if (m.status === 'current') pill = '<span class="status-pill pill-current">▶ Current</span>';
+    else                             pill = '<span class="status-pill pill-upcoming">Upcoming</span>';
+
+    list.innerHTML += `
+      <div class="match-list-row">
+        <span class="match-list-name">${getFlag(m.teamA)} ${m.teamA} vs ${m.teamB} ${getFlag(m.teamB)}</span>
+        <span class="match-list-time">${time}</span>
+        ${pill}
+      </div>`;
+  });
+}
+
+// ── SELECT WINNER ──
+function selectWinner(side) {
+  selectedWinner = side;
+  document.getElementById('win-btn-a').classList.toggle('selected', side === 'teamA');
+  document.getElementById('win-btn-b').classList.toggle('selected', side === 'teamB');
+  document.getElementById('win-btn-draw').classList.toggle('selected', side === 'draw');
+  document.getElementById('confirm-result-btn').disabled = false;
+}
+
+// ── CONFIRM RESULT ──
+async function confirmResult() {
+  if (!currentMatch || !selectedWinner) return;
+
+  const scoreA = document.getElementById('score-a').value || "0";
+  const scoreB = document.getElementById('score-b').value || "0";
+  const result = `${scoreA}-${scoreB}`;
+
+  let winnerName = null;
+  if (selectedWinner === 'teamA')   winnerName = currentMatch.teamA;
+  else if (selectedWinner === 'teamB') winnerName = currentMatch.teamB;
+  // draw = null → no payout
+
+  const matchName = `${currentMatch.teamA} vs ${currentMatch.teamB}`;
+
+  const confirmed = window.confirm(
+    `Set result for ${matchName}?\n\nScore: ${result}\nWinner: ${winnerName || "DRAW"}\n\nThis will process payouts immediately.`
+  );
+  if (!confirmed) return;
+
+  log(`Setting result: ${matchName} → ${winnerName || "Draw"} (${result})…`, "warn");
+
+  document.getElementById('confirm-result-btn').disabled = true;
+  document.getElementById('confirm-result-btn').innerText = "Processing…";
+
+  try {
+    const res = await post({
+      action:     'setMatchResult',
+      matchName:  matchName,
+      result:     result,
+      winner:     winnerName,
+      passcode:   adminPasscode
+    });
+
+    if (res.status === "success") {
+      log(`✓ Result set. ${res.winnersCount} winners paid (${res.totalPaid} pts). ${res.losersCount} losers (streak reset).`, "ok");
+      document.getElementById('confirm-result-btn').innerText = "✓ Done";
+      selectedWinner = null;
+      setTimeout(() => {
+        document.getElementById('confirm-result-btn').innerText = "Confirm Result + Pay Winners";
+        ['win-btn-a','win-btn-b','win-btn-draw'].forEach(id => document.getElementById(id).classList.remove('selected'));
+        loadDashboard();
+      }, 2500);
+    } else {
+      log("Error: " + res.message, "err");
+      document.getElementById('confirm-result-btn').disabled  = false;
+      document.getElementById('confirm-result-btn').innerText = "Confirm Result + Pay Winners";
+    }
+  } catch(e) {
+    log("Network error: " + e.message, "err");
+    document.getElementById('confirm-result-btn').disabled  = false;
+    document.getElementById('confirm-result-btn').innerText = "Confirm Result + Pay Winners";
+  }
+}
+
+// ── ADVANCE ──
+async function advanceToNextMatch() {
+  if (!window.confirm("Mark current match as played and advance to the next one?")) return;
+  log("Advancing to next match…", "warn");
+  try {
+    const res = await post({ action: 'advanceMatch', passcode: adminPasscode });
+    if (res.status === "success") {
+      log(`✓ Advanced. Now showing: ${res.nextTeamA} vs ${res.nextTeamB}`, "ok");
+      loadDashboard();
+    } else {
+      log("Error: " + res.message, "err");
+    }
+  } catch(e) { log("Network error.", "err"); }
+}
+
+// ── RESET PREDICTIONS ──
+async function resetCurrentPredictions() {
+  if (!currentMatch) return;
+  if (!window.confirm(`Delete all predictions for ${currentMatch.teamA} vs ${currentMatch.teamB} only?\n\nPoints already spent will NOT be refunded.`)) return;
+  log("Clearing predictions for current match…", "warn");
+  try {
+    const res = await post({
+      action: 'resetMatchPredictions',
+      matchName: `${currentMatch.teamA} vs ${currentMatch.teamB}`,
+      passcode: adminPasscode
+    });
+    if (res.status === "success") {
+      log(`✓ Cleared ${res.deleted} predictions for current match.`, "ok");
+    } else {
+      log("Error: " + res.message, "err");
+    }
+  } catch(e) { log("Network error.", "err"); }
+}
+
+// ── FULL RESET ──
+async function fullReset() {
+  if (!window.confirm("⚠️ FULL RESET\n\nThis will:\n• Clear ALL predictions\n• Reset ALL user points to 0\n• Reset ALL streaks to 0\n• Clear ALL match results\n\nThis cannot be undone. Are you sure?")) return;
+  if (!window.confirm("Second confirmation: Are you absolutely sure you want to reset everything?")) return;
+  log("Running full game reset…", "err");
+  try {
+    const res = await post({ action: 'fullGameReset', passcode: adminPasscode });
+    if (res.status === "success") {
+      log("✓ Full reset complete. All data cleared.", "ok");
+      loadDashboard();
+    } else {
+      log("Error: " + res.message, "err");
+    }
+  } catch(e) { log("Network error.", "err"); }
+}
+
+// ── LOG ──
+function log(msg, type = "") {
+  const el = document.getElementById('status-log');
+  const time = new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  el.innerHTML += `<div class="log-${type}"><span style="opacity:.4">[${time}]</span> ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+</script>
+</body>
+</html>
