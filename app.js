@@ -1,4 +1,3 @@
-// Replace this with your exact Google Apps Script URL from Step 2
 const API_URL = "https://script.google.com/macros/s/AKfycbxszwMiMyv94ERtlM7vp8i0FJ4Jg81BWXj6_dQm8u3yA_Y8su2CIngGqPIHV9EW2Bhe/exec";
 const LIFF_ID = "2009984765-j723B1C4"; 
 
@@ -6,7 +5,6 @@ let userProfile = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     initializeLiff();
-    startCountdown("June 12, 2026 02:00:00"); // First Match
 });
 
 async function initializeLiff() {
@@ -20,6 +18,9 @@ async function initializeLiff() {
         }
     } catch (err) {
         console.error("LIFF failed", err);
+        // Fallback if LIFF fails so it doesn't stay black
+        document.getElementById('loading-screen').classList.remove('active');
+        document.getElementById('auth-screen').classList.add('active');
     }
 }
 
@@ -32,13 +33,19 @@ async function fetchUserData(lineId, displayName) {
         const data = await response.json();
         userProfile = { lineId, ...data };
         
+        document.getElementById('loading-screen').classList.remove('active');
+
         if (data.isRegistered) {
             showDashboard();
-            fetchLeaderboard(); // Load the global scores
+            fetchLeaderboard();
+            fetchNextMatch(); 
         } else {
             document.getElementById('auth-screen').classList.add('active');
         }
-    } catch (error) { console.error("Error:", error); }
+    } catch (error) { 
+        console.error("Error:", error); 
+        document.getElementById('loading-screen').innerHTML = "<h3 style='color:red;'>CONNECTION ERROR</h3><p>Please refresh.</p>";
+    }
 }
 
 function showDashboard() {
@@ -60,6 +67,7 @@ function verifyPhone() {
     userProfile.isRegistered = true;
     showDashboard();
     fetchLeaderboard();
+    fetchNextMatch();
 }
 
 async function submitClaim() {
@@ -114,12 +122,35 @@ async function fetchLeaderboard() {
     } catch (e) { console.error(e); }
 }
 
+async function fetchNextMatch() {
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getNextMatch' })
+        });
+        const match = await res.json();
+        
+        if (match.status === "success") {
+            document.getElementById('next-match-teams').innerText = match.matchName;
+            startCountdown(match.kickoff);
+        } else {
+            document.getElementById('next-match-teams').innerText = match.matchName;
+            document.getElementById('countdown-timer').innerText = "00:00:00:00";
+        }
+    } catch (e) { console.error(e); }
+}
+
+let countdownInterval;
 function startCountdown(targetDate) {
+    if (countdownInterval) clearInterval(countdownInterval);
     const countDownDate = new Date(targetDate).getTime();
-    setInterval(function() {
+    
+    countdownInterval = setInterval(function() {
         const now = new Date().getTime();
         const distance = countDownDate - now;
+        
         if (distance < 0) {
+            clearInterval(countdownInterval);
             document.getElementById("countdown-timer").innerHTML = "KICKOFF!";
             return;
         }
@@ -127,6 +158,7 @@ function startCountdown(targetDate) {
         const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((distance % (1000 * 60)) / 1000);
+        
         document.getElementById("countdown-timer").innerHTML = `${d}d ${h}h ${m}m ${s}s`;
     }, 1000);
 }
