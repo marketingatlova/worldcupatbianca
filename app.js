@@ -8,12 +8,12 @@ let votePoints       = 100;
 const MIN_PTS        = 100;
 
 /* ── Helpers ── */
-const fmt     = (n) => Number(n).toLocaleString('en-US');
-const post    = (body) => fetch(API_URL, { method:'POST', body: JSON.stringify(body) }).then(r => r.json());
-const showEl  = (id, on) => { const el = document.getElementById(id); if(on) el.classList.add('active'); else el.classList.remove('active'); };
-const fmtDate = (iso) => {
-  const d = new Date(iso);
-  return d.toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+const fmt    = (n) => Number(n).toLocaleString('en-US');
+const post   = (b) => fetch(API_URL, { method:'POST', body:JSON.stringify(b) }).then(r => r.json());
+const showEl = (id, on) => document.getElementById(id).classList[on ? 'add' : 'remove']('active');
+const fmtDate= (iso) => {
+  try { return new Date(iso).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); }
+  catch { return ''; }
 };
 
 const FLAG = {
@@ -26,11 +26,11 @@ const FLAG = {
   "Nigeria":"🇳🇬","Ecuador":"🇪🇨","Saudi Arabia":"🇸🇦","South Korea":"🇰🇷",
   "Senegal":"🇸🇳","Curaçao":"🏳️"
 };
-const getFlag = (name) => FLAG[name] || "🏳️";
+const getFlag = (n) => FLAG[n] || "🏳️";
 
 
 /* ══════════════════════════════════════════
-   INIT
+   LIFF INIT
 ══════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", initializeLiff);
 
@@ -56,14 +56,14 @@ async function fetchUserData(lineId, displayName, pictureUrl) {
     showEl('loading-screen', false);
     if (data.isRegistered) {
       showDashboard();
-      fetchLeaderboard();
       fetchNextMatch();
+      fetchLeaderboard();
     } else {
       showEl('auth-screen', true);
     }
   } catch {
     document.getElementById('loading-screen').innerHTML =
-      '<span class="load-ball">⚠️</span><p class="load-text">Connection Error — Refresh</p>';
+      '<span class="load-ball">⚠️</span><p class="load-text">Connection Error</p>';
   }
 }
 
@@ -72,21 +72,34 @@ async function submitPhone() {
   const err   = document.getElementById('auth-error');
   const btn   = document.getElementById('auth-btn');
   err.style.display = 'none';
-  if (phone.length < 9) { err.innerText = "Please enter a valid phone number."; err.style.display='block'; return; }
+  if (phone.length < 9) {
+    err.innerText = "Please enter a valid phone number.";
+    err.style.display = 'block';
+    return;
+  }
   btn.innerText = "Saving…"; btn.disabled = true;
   try {
-    const result = await post({ action:'registerPhone', lineId:userProfile.lineId, phone });
-    if (result.status === 'success') {
-      userProfile = { ...userProfile, ...result, isRegistered:true };
+    const res = await post({ action:'registerPhone', lineId:userProfile.lineId, phone });
+    if (res.status === 'success') {
+      userProfile = { ...userProfile, ...res, isRegistered:true };
       showEl('auth-screen', false);
-      showDashboard(); fetchLeaderboard(); fetchNextMatch();
+      showDashboard();
+      fetchNextMatch();
+      fetchLeaderboard();
     } else {
-      err.innerText = result.message || "Something went wrong."; err.style.display='block';
+      err.innerText = res.message || "Error. Try again.";
+      err.style.display = 'block';
     }
-  } catch { err.innerText = "Network error."; err.style.display='block'; }
+  } catch {
+    err.innerText = "Network error."; err.style.display = 'block';
+  }
   btn.innerText = "Continue"; btn.disabled = false;
 }
 
+
+/* ══════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════ */
 function showDashboard() {
   showEl('auth-screen', false);
   showEl('dashboard-screen', true);
@@ -98,32 +111,37 @@ function updateStatCard() {
   const str = userProfile.currentStreak || 0;
   document.getElementById('user-footballs').innerText = fmt(pts);
   document.getElementById('user-streak').innerText    = str;
-  document.getElementById('user-rank').innerText      = str >= 5 ? 'MVP' : str >= 3 ? 'CAPTAIN' : 'RESERVE';
+  document.getElementById('user-rank').innerText      =
+    str >= 5 ? 'MVP' : str >= 3 ? 'CAPTAIN' : 'RESERVE';
 
-  // Streak glow animation when on a run
-  const statCard   = document.getElementById('stat-card');
-  const streakChip = document.getElementById('streak-chip');
+  const card  = document.getElementById('stat-card');
+  const chip  = document.getElementById('streak-chip');
   if (str >= 2) {
-    statCard.classList.add('on-streak');
-    streakChip.classList.add('on-streak');
+    card.classList.add('on-streak');
+    chip.classList.add('on-streak');
   } else {
-    statCard.classList.remove('on-streak');
-    streakChip.classList.remove('on-streak');
+    card.classList.remove('on-streak');
+    chip.classList.remove('on-streak');
   }
 }
 
 
 /* ══════════════════════════════════════════
    TAB SWITCHING
+   panel IDs: panel-match | panel-history | panel-table
+   button IDs: tbtn-match | tbtn-history  | tbtn-table
 ══════════════════════════════════════════ */
 function switchTab(tab) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  // Hide all panels
+  ['match','history','table'].forEach(t => {
+    document.getElementById('panel-' + t).classList.remove('active');
+    document.getElementById('tbtn-'  + t).classList.remove('active');
+  });
+  // Show selected
+  document.getElementById('panel-' + tab).classList.add('active');
+  document.getElementById('tbtn-'  + tab).classList.add('active');
 
-  document.getElementById('tab-' + tab).classList.add('active');
-  const tabIndex = { home:0, history:1, table:2 };
-  document.querySelectorAll('.nav-tab')[tabIndex[tab]].classList.add('active');
-
+  // Lazy-load content
   if (tab === 'history') fetchHistory();
   if (tab === 'table')   fetchLeaderboard();
 }
@@ -140,10 +158,10 @@ async function fetchNextMatch() {
       const d = new Date(md.kickoff);
       document.getElementById('next-match-time').innerText =
         d.toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-      document.getElementById('name-a').innerText = md.teamA;
-      document.getElementById('flag-a').innerText = getFlag(md.teamA);
-      document.getElementById('name-b').innerText = md.teamB;
-      document.getElementById('flag-b').innerText = getFlag(md.teamB);
+      document.getElementById('name-a').innerText  = md.teamA;
+      document.getElementById('flag-a').innerText  = getFlag(md.teamA);
+      document.getElementById('name-b').innerText  = md.teamB;
+      document.getElementById('flag-b').innerText  = getFlag(md.teamB);
       startCountdown(md.kickoff);
       applyVotedState(md.userVote, md.teamA, md.teamB);
     } else {
@@ -155,17 +173,29 @@ async function fetchNextMatch() {
 function applyVotedState(userVote, teamA, teamB) {
   const btnA = document.getElementById('btn-teamA');
   const btnB = document.getElementById('btn-teamB');
-  const statusRow = document.getElementById('voted-status-row');
-  const hintText  = document.getElementById('vote-hint-text');
+  const row  = document.getElementById('voted-status-row');
+  const hint = document.getElementById('vote-hint-text');
+
   btnA.classList.remove('voted-for','voted-against');
   btnB.classList.remove('voted-for','voted-against');
-  statusRow.classList.remove('show');
-  if (!userVote) { hintText.innerText = "Tap a team flag to place your prediction"; return; }
-  if (userVote === teamA) { btnA.classList.add('voted-for'); btnB.classList.add('voted-against'); }
-  else                    { btnB.classList.add('voted-for'); btnA.classList.add('voted-against'); }
+  row.classList.remove('show');
+
+  if (!userVote) {
+    hint.innerText = "Tap a team flag to place your prediction";
+    return;
+  }
+
+  if (userVote === teamA) {
+    btnA.classList.add('voted-for');
+    btnB.classList.add('voted-against');
+  } else {
+    btnB.classList.add('voted-for');
+    btnA.classList.add('voted-against');
+  }
+
   document.getElementById('voted-status-text').innerText = `You picked ${userVote}`;
-  statusRow.classList.add('show');
-  hintText.innerText = "You've placed your prediction for this match";
+  row.classList.add('show');
+  hint.innerText = "You've placed your prediction for this match";
 }
 
 function handleTeamTap(side) {
@@ -181,10 +211,10 @@ function handleTeamTap(side) {
 function openVoteSheet(side) {
   voteTeamSide = side;
   votePoints   = MIN_PTS;
-  const teamName = side === 'teamA' ? currentMatchData.teamA : currentMatchData.teamB;
-  const balance  = userProfile?.availableFootballs || 0;
-  document.getElementById('sheet-flag').innerText      = getFlag(teamName);
-  document.getElementById('sheet-team-name').innerText = teamName.toUpperCase();
+  const team    = side === 'teamA' ? currentMatchData.teamA : currentMatchData.teamB;
+  const balance = userProfile?.availableFootballs || 0;
+  document.getElementById('sheet-flag').innerText      = getFlag(team);
+  document.getElementById('sheet-team-name').innerText = team.toUpperCase();
   document.getElementById('sheet-balance').innerText   = fmt(balance) + ' pts';
   refreshStepper(); clearQuickPills();
   document.getElementById('vote-overlay').classList.add('open');
@@ -200,28 +230,27 @@ function closeVoteSheet() {
 }
 
 function adjustPoints(delta) {
-  const balance = userProfile?.availableFootballs || 0;
-  const next    = votePoints + delta;
-  if (next < MIN_PTS || next > balance) return;
-  votePoints = next; refreshStepper(); clearQuickPills();
+  const bal = userProfile?.availableFootballs || 0;
+  const nxt = votePoints + delta;
+  if (nxt < MIN_PTS || nxt > bal) return;
+  votePoints = nxt; refreshStepper(); clearQuickPills();
 }
 
-function setPoints(amount) {
-  const balance = userProfile?.availableFootballs || 0;
-  if (amount > balance) return;
-  votePoints = amount; refreshStepper();
+function setPoints(amt) {
+  const bal = userProfile?.availableFootballs || 0;
+  if (amt > bal) return;
+  votePoints = amt; refreshStepper();
   document.querySelectorAll('.quick-pill').forEach(p => {
-    p.classList.toggle('active', parseInt(p.innerText.replace(/,/g,'')) === amount);
+    p.classList.toggle('active', parseInt(p.innerText.replace(/,/g,'')) === amt);
   });
 }
 
 function refreshStepper() {
-  const balance = userProfile?.availableFootballs || 0;
+  const bal = userProfile?.availableFootballs || 0;
   document.getElementById('step-number').innerText = fmt(votePoints);
-  const btn = document.getElementById('vote-confirm-btn');
-  btn.disabled = (votePoints > balance || votePoints < MIN_PTS);
-  const minusBtn = document.querySelectorAll('.step-btn')[0];
-  if (minusBtn) minusBtn.style.opacity = votePoints <= MIN_PTS ? '0.3' : '1';
+  document.getElementById('vote-confirm-btn').disabled = (votePoints > bal || votePoints < MIN_PTS);
+  const minus = document.querySelectorAll('.step-btn')[0];
+  if (minus) minus.style.opacity = votePoints <= MIN_PTS ? '0.3' : '1';
 }
 
 function clearQuickPills() {
@@ -230,25 +259,25 @@ function clearQuickPills() {
 
 async function confirmVote() {
   if (!voteTeamSide || !currentMatchData) return;
-  const selectedTeam = voteTeamSide === 'teamA' ? currentMatchData.teamA : currentMatchData.teamB;
-  const matchName    = `${currentMatchData.teamA} vs ${currentMatchData.teamB}`;
+  const team  = voteTeamSide === 'teamA' ? currentMatchData.teamA : currentMatchData.teamB;
+  const match = `${currentMatchData.teamA} vs ${currentMatchData.teamB}`;
   closeVoteSheet();
   try {
-    const result = await post({ action:'submitVote', lineId:userProfile.lineId, matchName, team:selectedTeam, points:votePoints });
-    if (result.status === "success") {
-      userProfile.availableFootballs = result.newTotal;
-      document.getElementById('user-footballs').innerText = fmt(result.newTotal);
-      currentMatchData.userVote = selectedTeam;
-      applyVotedState(selectedTeam, currentMatchData.teamA, currentMatchData.teamB);
+    const res = await post({ action:'submitVote', lineId:userProfile.lineId, matchName:match, team, points:votePoints });
+    if (res.status === "success") {
+      userProfile.availableFootballs = res.newTotal;
+      document.getElementById('user-footballs').innerText = fmt(res.newTotal);
+      currentMatchData.userVote = team;
+      applyVotedState(team, currentMatchData.teamA, currentMatchData.teamB);
     } else {
-      alert(`❌ ${result.message}`);
+      alert(`❌ ${res.message}`);
     }
   } catch { alert("Network error."); }
 }
 
 
 /* ══════════════════════════════════════════
-   HISTORY TAB
+   HISTORY
 ══════════════════════════════════════════ */
 async function fetchHistory() {
   const list = document.getElementById('history-list');
@@ -260,15 +289,18 @@ async function fetchHistory() {
     if (!history || history.length === 0) {
       list.innerHTML = `<div class="history-empty">
         <span class="empty-icon">📋</span>
-        No predictions yet.<br>Tap a team flag on the Match tab to make your first prediction!
+        No predictions yet.<br>Tap a team on the Match tab to start!
       </div>`;
       renderHistorySummary([]);
       return;
     }
 
     renderHistorySummary(history);
-    renderHistoryList(history);
+    renderHistoryCards(history);
+    checkForWinCelebration(history);
+
   } catch(e) {
+    console.error(e);
     list.innerHTML = '<div class="history-empty"><span class="empty-icon">⚠️</span>Could not load history.</div>';
   }
 }
@@ -276,51 +308,50 @@ async function fetchHistory() {
 function renderHistorySummary(history) {
   const total = history.length;
   const wins  = history.filter(h => h.outcome === 'won').length;
-  // Net = sum of all deltas (won items give net +200, lost give -100)
   const net   = history.reduce((sum, h) => {
     if (h.outcome === 'pending') return sum;
-    return sum + h.pointsDelta;
+    return sum + (h.pointsDelta || 0);
   }, 0);
 
-  document.getElementById('hs-total-votes').innerText = total;
-  document.getElementById('hs-wins').innerText        = wins;
+  document.getElementById('hs-total').innerText = total || '0';
+  document.getElementById('hs-wins').innerText  = wins  || '0';
 
   const netEl = document.getElementById('hs-net');
   netEl.innerText = (net >= 0 ? '+' : '') + fmt(net);
   netEl.className = 'hs-num ' + (net > 0 ? 'positive' : net < 0 ? 'negative' : '');
 }
 
-function renderHistoryList(history) {
+function renderHistoryCards(history) {
   const list = document.getElementById('history-list');
   list.innerHTML = '';
 
-  const OUTCOME_ICON  = { won:'🏆', lost:'❌', pending:'⏳', draw:'🤝' };
-  const OUTCOME_LABEL = { won:'Correct!', lost:'Wrong Pick', pending:'Awaiting Result', draw:'Draw' };
+  const ICON  = { won:'🏆', lost:'❌', pending:'⏳', draw:'🤝' };
+  const LABEL = { won:'Correct!', lost:'Wrong Pick', pending:'Pending', draw:'Draw' };
 
   history.forEach((h, i) => {
-    const icon    = OUTCOME_ICON[h.outcome]  || '⏳';
-    const label   = OUTCOME_LABEL[h.outcome] || '—';
-    const deltaSign = h.outcome === 'won' ? '+' : h.outcome === 'lost' ? '' : '';
-    const deltaClass = h.outcome === 'won' ? 'pos' : h.outcome === 'lost' ? 'neg' : 'neu';
-    const deltaStr   = h.outcome === 'pending' ? '—'
+    const icon       = ICON[h.outcome]  || '⏳';
+    const label      = LABEL[h.outcome] || '—';
+    const settled    = h.outcome !== 'pending';
+    const deltaStr   = !settled ? '—'
                      : (h.pointsDelta >= 0 ? '+' : '') + fmt(h.pointsDelta);
-    const winnerStr  = h.winner ? ` · ${h.winner} won` : (h.outcome === 'pending' ? ' · Pending' : '');
+    const deltaClass = h.outcome === 'won' ? 'pos' : h.outcome === 'lost' ? 'neg' : 'neu';
+    const winnerNote = h.winner
+                     ? ` · ${h.winner} won`
+                     : h.outcome === 'pending' ? ' · Awaiting result' : '';
 
     const card = document.createElement('div');
     card.className = `hist-card outcome-${h.outcome}`;
-    card.style.animationDelay = `${i * 0.04}s`;
+    card.style.animationDelay = `${i * 0.045}s`;
     card.innerHTML = `
-      <div class="hist-icon ${h.outcome}">
-        <span>${icon}</span>
-      </div>
+      <div class="hist-icon ${h.outcome}">${icon}</div>
       <div class="hist-body">
         <div class="hist-match">${h.matchName}</div>
-        <div class="hist-pick">${getFlag(h.votedFor)} Picked ${h.votedFor}${winnerStr}</div>
+        <div class="hist-pick">${getFlag(h.votedFor)} Picked ${h.votedFor}${winnerNote}</div>
         <div class="hist-date">${fmtDate(h.timestamp)}</div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;">
+      <div class="hist-right">
         <div class="hist-delta ${deltaClass}">${deltaStr}</div>
-        <div class="hist-outcome-badge ${h.outcome}">${label}</div>
+        <div class="hist-badge ${h.outcome}">${label}</div>
       </div>`;
     list.appendChild(card);
   });
@@ -329,23 +360,33 @@ function renderHistoryList(history) {
 
 /* ══════════════════════════════════════════
    WIN CELEBRATION
-   Shown when: just voted AND has streak >= 1
-   OR when returning to app and streak >= 3
 ══════════════════════════════════════════ */
-function triggerCelebration(opts = {}) {
-  const {
-    title    = '🏆 Correct!',
-    sub      = 'Your prediction was right',
-    pts      = '+200',
-    emoji    = '🏆',
-    streakN  = 0
-  } = opts;
+function checkForWinCelebration(history) {
+  if (!history || history.length === 0) return;
+  const settled = history.filter(h => h.outcome === 'won' || h.outcome === 'lost');
+  if (settled.length === 0) return;
 
+  const latest   = settled[0]; // newest first
+  const streak   = userProfile.currentStreak || 0;
+  const key      = `cel_${userProfile.lineId}_${latest.timestamp}`;
+
+  if (latest.outcome === 'won' && !sessionStorage.getItem(key)) {
+    sessionStorage.setItem(key, '1');
+    const streakMsg = streak >= 3 ? `🔥 ${streak} in a row!` : 'Keep it up!';
+    setTimeout(() => triggerCelebration({
+      emoji: streak >= 3 ? '🔥' : '🏆',
+      title: streak >= 3 ? `${streak} IN A ROW!` : 'Correct Pick!',
+      sub:   `${getFlag(latest.votedFor)} ${latest.votedFor} won! ${streakMsg}`,
+      pts:   '+' + fmt(200),
+    }), 500);
+  }
+}
+
+function triggerCelebration({ emoji='🏆', title='Correct!', sub='', pts='+200' } = {}) {
   document.getElementById('win-toast-emoji').innerText = emoji;
   document.getElementById('win-toast-title').innerText = title;
   document.getElementById('win-toast-sub').innerText   = sub;
   document.getElementById('win-toast-pts').innerText   = pts;
-
   spawnConfetti();
   document.getElementById('win-celebration').classList.add('show');
   document.body.style.overflow = 'hidden';
@@ -358,57 +399,21 @@ function closeCelebration() {
 }
 
 function spawnConfetti() {
-  const container = document.getElementById('confetti-container');
-  container.innerHTML = '';
-  const colors = ['#E8A020','#FAB31E','#2ECC71','#1A4D2E','#FFF1DA','#F39C12','#27AE60','#F1C40F'];
-  const count  = 70;
-
-  for (let i = 0; i < count; i++) {
-    const piece = document.createElement('div');
-    piece.className = 'confetti-piece';
-    const size  = Math.random() * 8 + 5;
-    const left  = Math.random() * 100;
-    const delay = Math.random() * 0.8;
-    const dur   = Math.random() * 1.5 + 1.5;
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    const shape = Math.random() > 0.5 ? '50%' : '2px';
-
-    piece.style.cssText = `
-      left:${left}%;
-      width:${size}px; height:${size}px;
-      background:${color};
-      border-radius:${shape};
-      animation-duration:${dur}s;
-      animation-delay:${delay}s;
-    `;
-    container.appendChild(piece);
-  }
-}
-
-/* Check if user just got a result they won (call after history loads) */
-function checkForWinCelebration(history) {
-  if (!history || history.length === 0) return;
-  const streak = userProfile.currentStreak || 0;
-
-  // Find the most recent settled entry
-  const settled = history.filter(h => h.outcome === 'won' || h.outcome === 'lost');
-  if (settled.length === 0) return;
-
-  const latest = settled[0]; // already sorted newest first
-
-  // Only celebrate if the most recent result was a WIN
-  // and we haven't shown it this session
-  const celebKey = `celebrated_${userProfile.lineId}_${latest.timestamp}`;
-  if (latest.outcome === 'won' && !sessionStorage.getItem(celebKey)) {
-    sessionStorage.setItem(celebKey, '1');
-    const streakMsg = streak >= 3 ? `🔥 ${streak} match win streak!` : `Keep it up!`;
-    const pts = '+' + fmt(200); // net gain per win
-    setTimeout(() => triggerCelebration({
-      emoji:   streak >= 3 ? '🔥' : '🏆',
-      title:   streak >= 3 ? `${streak} IN A ROW!` : 'Correct Pick!',
-      sub:     `${getFlag(latest.votedFor)} ${latest.votedFor} won! ${streakMsg}`,
-      pts,
-    }), 600);
+  const c = document.getElementById('confetti-container');
+  c.innerHTML = '';
+  const colors = ['#E8A020','#FAB31E','#2ECC71','#1A4D2E','#F1C40F','#27AE60','#FFF1DA'];
+  for (let i = 0; i < 65; i++) {
+    const p   = document.createElement('div');
+    p.className = 'confetti-piece';
+    const sz  = Math.random() * 8 + 5;
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      width:${sz}px; height:${sz}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      border-radius:${Math.random()>.5?'50%':'2px'};
+      animation-duration:${Math.random()*1.5+1.5}s;
+      animation-delay:${Math.random()*.8}s;`;
+    c.appendChild(p);
   }
 }
 
@@ -425,11 +430,11 @@ async function fetchLeaderboard() {
       list.innerHTML = '<p style="font-size:.78rem;color:rgba(26,77,46,.4);text-align:center;padding:8px 0;">No players yet</p>';
       return;
     }
-    const medals    = ["🥇","🥈","🥉","4","5"];
-    const colors    = ["#E8A020","#9BA5B4","#B87333","rgba(26,77,46,.32)","rgba(26,77,46,.32)"];
-    const maxPts    = users[0].points || 1;
+    const medals = ["🥇","🥈","🥉","4","5"];
+    const colors = ["#E8A020","#9BA5B4","#B87333","rgba(26,77,46,.32)","rgba(26,77,46,.32)"];
+    const maxPts = users[0].points || 1;
     users.forEach((u, i) => {
-      const barPct = Math.max(8, Math.round((u.points / maxPts) * 100));
+      const bar = Math.max(8, Math.round((u.points / maxPts) * 100));
       list.innerHTML += `
         <div class="lb-row${i===0?' lb-first':''}">
           <div class="lb-left">
@@ -438,7 +443,7 @@ async function fetchLeaderboard() {
                  onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=235E44&color=FFF1DA'" alt="">
             <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">
               <span class="lb-name">${u.name}</span>
-              <div class="lb-bar-wrap"><div class="lb-bar" style="width:${barPct}%"></div></div>
+              <div class="lb-bar-wrap"><div class="lb-bar" style="width:${bar}%"></div></div>
             </div>
           </div>
           <div class="lb-right">
@@ -460,23 +465,23 @@ function toggleClaimForm() {
 }
 
 async function submitClaim() {
-  const amount     = document.getElementById('spend-amount').value;
-  const billNumber = document.getElementById('bill-number').value;
-  const passcode   = document.getElementById('staff-passcode').value;
-  const msg        = document.getElementById('claim-message');
-  const btn        = document.getElementById('claim-btn');
-  if (!amount||!billNumber||!passcode) return alert("All fields are required.");
+  const amt  = document.getElementById('spend-amount').value;
+  const bill = document.getElementById('bill-number').value;
+  const pass = document.getElementById('staff-passcode').value;
+  const msg  = document.getElementById('claim-message');
+  const btn  = document.getElementById('claim-btn');
+  if (!amt||!bill||!pass) return alert("All fields required.");
   btn.innerText = "Verifying…"; msg.style.display = "none";
   try {
-    const result = await post({ action:'addPoints', lineId:userProfile.lineId, amount, passcode, billNumber });
+    const res = await post({ action:'addPoints', lineId:userProfile.lineId, amount:amt, passcode:pass, billNumber:bill });
     msg.style.display = "block";
-    if (result.status === "success") {
-      msg.style.color = "#1A4D2E"; msg.innerText = result.message;
-      userProfile.availableFootballs = result.newTotal;
-      document.getElementById('user-footballs').innerText = fmt(result.newTotal);
-      document.getElementById('spend-amount').value=document.getElementById('bill-number').value=document.getElementById('staff-passcode').value="";
+    if (res.status === "success") {
+      msg.style.color = "#1A4D2E"; msg.innerText = res.message;
+      userProfile.availableFootballs = res.newTotal;
+      document.getElementById('user-footballs').innerText = fmt(res.newTotal);
+      document.getElementById('spend-amount').value = document.getElementById('bill-number').value = document.getElementById('staff-passcode').value = "";
       setTimeout(toggleClaimForm, 2000);
-    } else { msg.style.color="#C0392B"; msg.innerText=result.message; }
+    } else { msg.style.color="#C0392B"; msg.innerText=res.message; }
   } catch { msg.style.display="block"; msg.innerText="Network error."; }
   btn.innerText = "Authorize Points";
 }
@@ -498,34 +503,6 @@ function startCountdown(targetDate) {
     }
     const d=Math.floor(dist/86400000), h=Math.floor((dist%86400000)/3600000),
           m=Math.floor((dist%3600000)/60000), s=Math.floor((dist%60000)/1000);
-    document.getElementById("countdown-timer").innerHTML = `${d}d ${h}h ${m}m ${s}s`;
+    document.getElementById("countdown-timer").innerHTML=`${d}d ${h}h ${m}m ${s}s`;
   }, 1000);
-}
-
-
-/* ══════════════════════════════════════════
-   HISTORY with celebration check on load
-   Override fetchHistory to also check wins
-══════════════════════════════════════════ */
-const _origFetchHistory = fetchHistory;
-// Patch: after history loads, check for win celebration
-async function fetchHistory() {
-  const list = document.getElementById('history-list');
-  list.innerHTML = '<div class="history-empty"><span class="empty-icon">⏳</span>Loading…</div>';
-  try {
-    const history = await post({ action:'getUserHistory', lineId:userProfile.lineId });
-    if (!history || history.length === 0) {
-      list.innerHTML = `<div class="history-empty">
-        <span class="empty-icon">📋</span>
-        No predictions yet.<br>Tap a team flag on the Match tab to make your first prediction!
-      </div>`;
-      renderHistorySummary([]);
-      return;
-    }
-    renderHistorySummary(history);
-    renderHistoryList(history);
-    checkForWinCelebration(history);
-  } catch(e) {
-    list.innerHTML = '<div class="history-empty"><span class="empty-icon">⚠️</span>Could not load history.</div>';
-  }
 }
